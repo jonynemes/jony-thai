@@ -246,7 +246,7 @@ function renderMenu(){
     <div class="dish" id="d-${i.id}">${i.img?`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`:""}<div class="top"><span>${i.n}</span><span class="lead"></span><span class="price"><span class="nis">₪</span>${i.p}</span></div>
     <small>${i.d}</small>
     <div class="qty"><button class="qb" data-m="${i.id}" aria-label="הפחת">−</button><span class="qn" id="q-${i.id}">0</span><button class="qb" data-p="${i.id}" aria-label="הוסף">+</button></div>
-    <button class="notebtn" type="button" data-nb="${i.id}">+ הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<p class="menufoot">כל המנות מוכנות טריות ומוכנות לאיסוף</p><div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
+    <button class="notebtn" type="button" data-nb="${i.id}">+ הוסף הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<p class="menufoot">כל המנות מוכנות טריות ומוכנות לאיסוף</p><div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
   updateBar();
 }
 function updateBar(){const n=count(),b=$("#bar");if(!b)return;b.classList.toggle("empty",!n);$("#barTxt").textContent=n?n+" מנות · "+money(total()):""}
