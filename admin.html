@@ -28,7 +28,7 @@ button{cursor:pointer;border:0;border-radius:999px;padding:.55rem 1.1rem;font-we
 header .ghost{border-color:var(--gold2);color:var(--gold2)}
 input,select,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-.tabs{display:flex;gap:.5rem;margin:.5rem 0 1rem;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:.5rem;margin:.5rem 0 1rem;flex-wrap:wrap;align-items:center;justify-content:center}
 .tabs .tab{background:var(--card);border:2px solid var(--line);color:var(--ink)}
 .tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
@@ -73,7 +73,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .empty{text-align:center;opacity:.7;padding:2rem}
 #toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold2);padding:.6rem 1.1rem;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5;font-weight:600}
 #toast.on{opacity:1}
-#loader{position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:.6rem;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:.55rem 1.1rem;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:600}
+#loader{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;display:flex;align-items:center;gap:.6rem;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:.55rem 1.1rem;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:600}
 .spin{width:1.2rem;height:1.2rem;border:3px solid var(--line);border-top-color:var(--saffron);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .spin.sm{display:inline-block;width:1rem;height:1rem;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:#fff;vertical-align:-.15em;margin-inline-end:.35rem}
