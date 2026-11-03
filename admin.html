@@ -133,7 +133,7 @@ async function loadOrders(initial){
     const d=await get("orders");
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
-    STATUSES=d.statuses;ORDERS=d.orders.map(fixLegacy);
+    STATUSES=d.statuses;ORDERS=d.orders.map(fixLegacy);applyOverrides();
     const nos=new Set(ORDERS.map(o=>o.orderNo));
     if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
     known=nos;
@@ -146,6 +146,9 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
+// סטטוסים ששונו כאן וטרם אושרו מהגיליון – מוצגים מיד ונשמרים עד שהגיליון מתעדכן
+const OVR={};
+function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
 // סינון לפי סטטוס
 const FILTERS={new:["חדשה","דווח תשלום"],paid:["שולם"],prep:["בהכנה"],ready:["מוכנה"],done:["נמסרה"]};
 const inTab=(o,t)=>t==="all"||(FILTERS[t]||[]).includes(o.status);
@@ -192,6 +195,7 @@ function menuCard(m){
 document.addEventListener("change",async e=>{
   const sel=e.target.closest("select[data-no]");
   if(sel){
+    OVR[sel.dataset.no]={s:sel.value,t:Date.now()};
     const o=ORDERS.find(x=>x.orderNo===sel.dataset.no);if(o){o.status=sel.value;renderOrders()} // מעבירים מיד לסינון החדש
     await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
     toast("הסטטוס עודכן: "+sel.value);await loadOrders();
