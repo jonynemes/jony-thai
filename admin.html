@@ -162,7 +162,7 @@ function renderOrders(){
       <div class="items">${esc(o.items)}</div>
       ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
       <div class="of"><b><span class="nis">₪</span>${esc(o.total)}</b>
-        <select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.filter(s=>s!=="דווח תשלום"||s===o.status).map(s=>`<option${s===o.status?" selected":""}>${s}</option>`).join("")}</select></div>
+        <select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.filter(s=>s!=="דווח תשלום").map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select></div>
     </div>`).join(""):`<div class="empty">${empty}</div>`;
 }
 
@@ -192,8 +192,9 @@ function menuCard(m){
 document.addEventListener("change",async e=>{
   const sel=e.target.closest("select[data-no]");
   if(sel){
+    const o=ORDERS.find(x=>x.orderNo===sel.dataset.no);if(o){o.status=sel.value;renderOrders()} // מעבירים מיד לסינון החדש
     await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
-    toast("הסטטוס עודכן");await loadOrders();
+    toast("הסטטוס עודכן: "+sel.value);await loadOrders();
   }
 });
 document.addEventListener("click",async e=>{
