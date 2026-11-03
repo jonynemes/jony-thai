@@ -4,54 +4,66 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>התאילנדי של ג'וני</title>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Secular+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Suez+One&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fbf6e9;--ink:#1d2b24;--green:#1f5d46;--chili:#d6322b;--lime:#c9d94a;--card:#fff;--line:#e4dcc4}
-@media (prefers-color-scheme:dark){:root{--bg:#14201b;--ink:#f3eedd;--green:#7fd1a6;--chili:#ff6a5f;--lime:#c9d94a;--card:#1d2d26;--line:#2f443a}}
+:root{--bg:#f1f5ef;--ink:#13302d;--jade:#0f3d3a;--jade2:#17524d;--gold:#c79a3b;--gold2:#e6c778;--saffron:#e8731a;--orchid:#a3345f;--card:#fffdf8;--line:#dfd6bd;--chili:#c8102e;--green:#17524d;--lime:#f0d58a}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1f1d;--ink:#f3ecd6;--jade:#06201e;--jade2:#0f3d3a;--gold:#e0b351;--gold2:#f0d58a;--saffron:#f58a35;--orchid:#e0699a;--card:#13302d;--line:#2a4b46;--chili:#ff6a5f;--green:#8fd9bf;--lime:#c79a3b}}
 *{box-sizing:border-box}
 body{margin:0;font-family:'Heebo',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
-h1,h2,h3{font-family:'Secular One','Heebo',sans-serif;font-weight:400;margin:0}
-header{padding:2.2rem 1.2rem 1.4rem;text-align:center;border-bottom:3px solid var(--chili)}
-header h1{font-size:clamp(2.4rem,9vw,4.5rem);color:var(--chili);line-height:1}
-header p{margin:.6rem 0 0;color:var(--green);font-weight:600}
-main{max-width:1000px;margin:0 auto;padding:1rem 1rem 6rem}
+h1,h2,h3{font-family:'Suez One','Heebo',serif;font-weight:400;margin:0}
+header{position:relative;text-align:center;padding:2.6rem 1rem 3.2rem;color:var(--gold2);background:
+ radial-gradient(circle at 50% 120%,rgba(232,115,26,.35),transparent 55%),
+ repeating-conic-gradient(from 45deg at 50% 50%,rgba(199,154,59,.10) 0 25%,transparent 0 50%) 0 0/34px 34px,
+ var(--jade)}
+header::before,header::after{content:"";position:absolute;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg,var(--gold) 0 14px,transparent 14px 20px)}
+header::before{top:10px;opacity:.7}
+header::after{bottom:0;height:10px;background:repeating-linear-gradient(135deg,var(--gold) 0 10px,var(--jade) 10px 20px)}
+header h1{font-size:clamp(2.6rem,10vw,5rem);line-height:1.05;letter-spacing:.01em;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+header p{margin:.8rem 0 0;color:#e9e1c7;font-weight:600;font-size:1.05rem}
+main{max-width:1000px;margin:0 auto;padding:1.4rem 1rem 6.5rem}
 .view{display:none}.view.on{display:block}
-.cat{margin:1.8rem 0 .6rem;color:var(--green);font-size:1.5rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:.8rem}
-.dish{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.9rem}
-.dish .top{display:flex;justify-content:space-between;gap:.5rem;font-weight:800}
-.dish .price{color:var(--chili);white-space:nowrap}
-.dish small{display:block;opacity:.75;margin:.2rem 0 .6rem}
-.qty{display:flex;align-items:center;gap:.6rem}
-button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:.6rem 1rem;font-weight:600}
-.qb{width:2.4rem;height:2.4rem;padding:0;background:var(--lime);color:#1d2b24;font-size:1.3rem}
-.qn{min-width:1.6rem;text-align:center;font-weight:800}
-.note{width:100%;margin-top:.6rem;display:none}
+.cat{margin:2rem 0 .8rem;color:var(--jade2);font-size:1.6rem;display:flex;align-items:center;gap:.7rem}
+.cat::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem}
+.dish{position:relative;background:var(--card);border:1px solid var(--line);border-inline-start:5px solid var(--gold);border-radius:4px 18px 4px 18px;padding:1rem 1.1rem;transition:box-shadow .15s,border-color .15s}
+.dish.has{border-inline-start-color:var(--saffron);box-shadow:0 6px 18px rgba(15,61,58,.14)}
+.dish img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:2px 14px 2px 14px;margin:0 0 .8rem;background:var(--line)}
+.dish .top{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;font-weight:800;font-size:1.08rem}
+.dish .price{font-family:'Suez One',serif;font-weight:400;color:var(--saffron);font-size:1.35rem;white-space:nowrap}
+.dish small{display:block;opacity:.75;margin:.25rem 0 .7rem}
+.dish small:empty{display:none}
+.dish .top+.qty{margin-top:.7rem}
+.qty{display:flex;align-items:center;gap:.7rem}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:.65rem 1.3rem;font-weight:800}
+.qb{width:2.5rem;height:2.5rem;padding:0;background:var(--jade2);color:var(--gold2);font-size:1.35rem;line-height:1}
+.qb[data-p]{background:var(--saffron);color:#fff}
+.qn{min-width:1.8rem;text-align:center;font-weight:800;font-size:1.15rem}
+.note{width:100%;margin-top:.7rem;display:none}
 .dish.has .note{display:block}
-input,textarea{font:inherit;width:100%;padding:.6rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--chili);outline-offset:2px}
-.bar{position:fixed;inset:auto 0 0 0;background:var(--green);color:#fff;padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom,0px));display:none;justify-content:space-between;align-items:center;gap:1rem}
+input,textarea{font:inherit;width:100%;padding:.65rem .8rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+.bar{position:fixed;inset:auto 0 0 0;background:var(--jade);color:var(--gold2);border-top:3px solid var(--gold);padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom,0px));display:none;justify-content:space-between;align-items:center;gap:1rem;font-weight:800}
 .bar.on{display:flex}
-.primary{background:var(--chili);color:#fff}
-.ghost{background:transparent;border:1px solid currentColor;color:inherit}
-.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;margin:1rem 0}
-.row{display:flex;justify-content:space-between;gap:1rem;padding:.4rem 0;border-bottom:1px dashed var(--line)}
+.primary{background:var(--saffron);color:#fff}
+.ghost{background:transparent;border:2px solid var(--jade2);color:var(--jade2)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:4px 18px 4px 18px;padding:1rem 1.1rem;margin:1rem 0}
+.row{display:flex;justify-content:space-between;gap:1rem;padding:.5rem 0;border-bottom:1px dashed var(--line)}
 .row:last-child{border:0}
-label{display:block;font-weight:600;margin:.7rem 0 .25rem}
-.total{font-size:1.6rem;color:var(--chili);font-family:'Secular One',sans-serif}
+h2{color:var(--jade2);font-size:1.7rem}
+label{display:block;font-weight:600;margin:.8rem 0 .25rem}
+.total{font-size:1.7rem;color:var(--saffron);font-family:'Suez One',serif}
 .pay{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem}
-.pay a,.pay button{display:block;text-align:center;text-decoration:none;color:#fff;padding:.8rem;border-radius:8px;font-weight:800}
+.pay a,.pay button{display:block;text-align:center;text-decoration:none;color:#fff;padding:.85rem;border-radius:999px;font-weight:800}
 .bit{background:#1b6ef3}.pbx{background:#00a0c6}
-.copyrow{display:flex;gap:.5rem;margin-top:.5rem}
-.copyrow button{flex:1;background:var(--lime);color:#1d2b24}
-#toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.6rem 1rem;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s}
+.copyrow{display:flex;gap:.5rem;margin-top:.6rem}
+.copyrow button{flex:1;background:var(--lime);color:#1b1b12}
+#toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold2);padding:.6rem 1.1rem;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 #toast.on{opacity:1}
-
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:1rem;z-index:10}
+.modal{position:fixed;inset:0;background:rgba(5,25,23,.65);display:none;align-items:center;justify-content:center;padding:1rem;z-index:10}
 .modal.on{display:flex}
-.modal .card{background:var(--card);color:var(--ink);border-radius:14px;padding:1.6rem;max-width:380px;width:100%;text-align:center}
-.modal .card h3{font-size:1.6rem;color:var(--green);margin-bottom:.5rem}
-.spin{width:2.6rem;height:2.6rem;border:4px solid var(--line);border-top-color:var(--chili);border-radius:50%;margin:.4rem auto 1rem;animation:sp .8s linear infinite}
+.modal .card{background:var(--card);color:var(--ink);border:2px solid var(--gold);border-radius:4px 22px 4px 22px;padding:1.7rem;max-width:380px;width:100%;text-align:center}
+.modal .card h3{font-size:1.7rem;color:var(--jade2);margin-bottom:.5rem}
+.spin{width:2.6rem;height:2.6rem;border:4px solid var(--line);border-top-color:var(--saffron);border-radius:50%;margin:.4rem auto 1rem;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.5s}}
 </style>
@@ -139,7 +151,7 @@ function go(v){document.querySelectorAll(".view").forEach(e=>e.classList.toggle(
 
 function renderMenu(){
   $("#menu").innerHTML=MENU.map(c=>`${c.cat?`<h2 class="cat">${c.cat}</h2>`:""}<div class="grid">`+c.items.map(i=>`
-    <div class="dish" id="d-${i.id}"><div class="top"><span>${i.n}</span><span class="price">${money(i.p)}</span></div>
+    <div class="dish" id="d-${i.id}">${i.img?`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`:""}<div class="top"><span>${i.n}</span><span class="price">${money(i.p)}</span></div>
     <small>${i.d}</small>
     <div class="qty"><button class="qb" data-m="${i.id}" aria-label="הפחת">−</button><span class="qn" id="q-${i.id}">0</span><button class="qb" data-p="${i.id}" aria-label="הוסף">+</button></div>
     <input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("");
@@ -214,7 +226,7 @@ async function loadMenu(){
     rows.forEach((x,i)=>{
       if(!x.name||String(x.active).trim()==="לא")return;
       const c=x.cat||"";if(!map.has(c))map.set(c,[]);
-      map.get(c).push({id:"r"+(i+1),n:x.name,d:x.desc||"",p:Number(x.price)||0});
+      map.get(c).push({id:"r"+(i+1),n:x.name,d:x.desc||"",p:Number(x.price)||0,img:x.img||""});
     });
     if(!map.size)return;
     MENU=[...map].map(([cat,items])=>({cat,items}));
