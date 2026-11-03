@@ -126,7 +126,7 @@ async function get(action){busy(1);try{
   return await r.json();
 }finally{busy(-1)}}
 async function post(body){
-  busy(1);try{await fetch(SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})})}finally{busy(-1)}
+  busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{busy(-1)}
 }
 function showLogin(msg){
   $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#err").textContent=msg||"";
@@ -152,6 +152,7 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
+function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון (ייתכן שזו שורה ישנה – הריצו את fixOldRows)","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","network":"שגיאת חיבור – השינוי לא נשמר"}[r]||("השמירה נכשלה: "+r)}
 // סטטוסים ששונו כאן וטרם אושרו מהגיליון – מוצגים מיד ונשמרים עד שהגיליון מתעדכן
 const OVR={};
 function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
@@ -203,7 +204,8 @@ document.addEventListener("change",async e=>{
   if(sel){
     OVR[sel.dataset.no]={s:sel.value,t:Date.now()};
     const o=ORDERS.find(x=>x.orderNo===sel.dataset.no);if(o){o.status=sel.value;renderOrders()} // מעבירים מיד לסינון החדש
-    await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
+    const res=await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
+    if(res!=="ok"){delete OVR[sel.dataset.no];toast(postErr(res));await loadOrders();return}
     toast("הסטטוס עודכן: "+sel.value);await loadOrders();
   }
 });
@@ -222,7 +224,8 @@ document.addEventListener("click",async e=>{
     c.querySelectorAll("[data-f]").forEach(i=>item[i.dataset.f]=i.value.trim());
     if(!item.name||item.price===""){toast("חסר שם או מחיר");return}
     b.disabled=true;
-    await post({action:item.row?"saveMenuRow":"addMenuRow",item});
+    const res=await post({action:item.row?"saveMenuRow":"addMenuRow",item});
+    if(res!=="ok"){b.disabled=false;toast(postErr(res));return}
     toast("נשמר");await loadMenu();
   }
 });
