@@ -112,6 +112,7 @@ function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").h
 async function loadOrders(initial){
   try{
     const d=await get("orders");
+    if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
     STATUSES=d.statuses;ORDERS=d.orders;
     const nos=new Set(ORDERS.map(o=>o.orderNo));
