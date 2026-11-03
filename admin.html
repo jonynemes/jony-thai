@@ -36,6 +36,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .who{margin:.3rem 0}
 .who a{color:var(--jade2);font-weight:600}
 @media (prefers-color-scheme:dark){.who a{color:var(--gold2)}}
+.cust{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem 1.1rem;border:1px solid var(--line);border-radius:10px;padding:.55rem .8rem;margin:.55rem 0 .7rem}
+.cust a{color:var(--jade2);font-weight:600}
+@media (prefers-color-scheme:dark){.cust a{color:var(--gold2)}}
+.cl{display:block;width:100%;font-size:.78rem;font-weight:700;opacity:.6;margin-bottom:.1rem}
+.nis{font-family:'Heebo',sans-serif;font-weight:700;font-size:.85em}
 .items{white-space:pre-line;background:var(--bg);border-radius:8px;padding:.5rem .7rem;margin:.5rem 0}
 .onote{font-style:italic;margin:.3rem 0}
 .of{display:flex;justify-content:space-between;align-items:center;gap:1rem}
@@ -115,7 +120,7 @@ async function loadOrders(initial){
     const d=await get("orders");
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
-    STATUSES=d.statuses;ORDERS=d.orders;
+    STATUSES=d.statuses;ORDERS=d.orders.map(fixLegacy);
     const nos=new Set(ORDERS.map(o=>o.orderNo));
     if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
     known=nos;
@@ -125,6 +130,8 @@ async function loadOrders(initial){
 function fmtTime(t){const d=new Date(t);return isNaN(d)?"":d.toLocaleString("he-IL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
 function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972"+n.slice(1);return "https://wa.me/"+n}
 
+// שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
+function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
 const PENDING=["חדשה","דווח תשלום"];
 const isPaid=o=>!PENDING.includes(o.status);
@@ -139,11 +146,12 @@ function renderOrders(){
   $("#orders").innerHTML=list.length?list.map(o=>`
     <div class="card" data-s="${esc(o.status)}">
       <div class="oh"><span>#${esc(o.orderNo)}</span><span>${fmtTime(o.time)}</span></div>
-      <div class="who"><b>${esc(o.name)}</b> · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · <a href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
+      <div class="cust"><span class="cl">פרטי המזמין</span><b>${esc(o.name)}</b><a href="tel:${esc(o.phone)}" dir="ltr">${esc(o.phone)}</a><a class="wa" href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
+      <span class="cl">המנות</span>
       <div class="items">${esc(o.items)}</div>
       ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
-      <div class="of"><b>₪${esc(o.total)}</b>
-        <select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.map(s=>`<option${s===o.status?" selected":""}>${s}</option>`).join("")}</select></div>
+      <div class="of"><b><span class="nis">₪</span>${esc(o.total)}</b>
+        <select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.filter(s=>s!=="דווח תשלום"||s===o.status).map(s=>`<option${s===o.status?" selected":""}>${s}</option>`).join("")}</select></div>
     </div>`).join(""):`<div class="empty">${empty}</div>`;
 }
 
