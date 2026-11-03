@@ -77,7 +77,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .empty{text-align:center;opacity:.7;padding:2rem}
 #toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold2);padding:.6rem 1.1rem;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5;font-weight:600}
 #toast.on{opacity:1}
-#loader{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;display:flex;align-items:center;gap:.6rem;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:.55rem 1.1rem;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:600}
+#loader{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,18,16,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);cursor:wait}
+.lbox{display:flex;align-items:center;gap:.6rem;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:.55rem 1.1rem;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:600}
 .spin{width:1.2rem;height:1.2rem;border:3px solid var(--line);border-top-color:var(--saffron);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .spin.sm{display:inline-block;width:1rem;height:1rem;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:#fff;vertical-align:-.15em;margin-inline-end:.35rem}
@@ -115,7 +116,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div id="menu" hidden></div>
   </section>
 </main>
-<div id="loader" hidden role="status" aria-label="טוען"><div class="spin"></div><span>טוען…</span></div>
+<div id="loader" hidden role="status" aria-label="טוען"><div class="lbox"><div class="spin"></div><span>טוען…</span></div></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -131,10 +132,10 @@ function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");setT
 function beep(){try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(audio.currentTime+.25)}catch(e){}}
 
 let busyN=0;function busy(d){busyN=Math.max(0,busyN+d);$("#loader").hidden=!busyN;$("#refresh").classList.toggle("spinning",busyN>0)}
-async function get(action){busy(1);try{
+async function get(action,silent){if(!silent)busy(1);try{
   const r=await fetch(SHEETS_URL+"?action="+action+"&key="+encodeURIComponent(KEY));
   return await r.json();
-}finally{busy(-1)}}
+}finally{if(!silent)busy(-1)}}
 async function post(body){
   busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{busy(-1)}
 }
@@ -144,9 +145,9 @@ function showLogin(msg){
 }
 function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").hidden=false;$("#views").hidden=false}
 
-async function loadOrders(initial){
+async function loadOrders(initial,silent){
   try{
-    const d=await get("orders");
+    const d=await get("orders",silent);
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
     STATUSES=d.statuses;ORDERS=d.orders.map(fixLegacy);applyOverrides();
@@ -270,7 +271,7 @@ async function login(){
   btn.disabled=false;btn.textContent="כניסה";
   if(ok){try{localStorage.setItem("jt_admin_key",KEY)}catch(e){}start()}
 }
-function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&!document.hidden)loadOrders()},30000)}
+function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&!document.hidden)loadOrders(false,true)},30000)}
 if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
 </script>
 </body>
