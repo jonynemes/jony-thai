@@ -49,6 +49,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .of{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;gap:1rem}
 .of b{font-family:'Suez One',serif;font-size:1.4rem;color:var(--saffron);font-weight:400}
 .of select{width:auto;min-width:9rem}
+.st{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.paybadge{font-size:.85rem;font-weight:700;color:#fff;background:#c8102e;padding:.3rem .7rem;border-radius:8px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-bottom:.6rem}
 .grid2 label{font-size:.85rem;font-weight:600;display:block}
 #login{max-width:380px;margin:3rem auto;text-align:center}
@@ -165,7 +167,7 @@ function renderOrders(){
       <div class="items">${esc(o.items)}</div>
       ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
       <div class="of"><b><span class="nis">₪</span>${esc(o.total)}</b>
-        <select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.filter(s=>s!=="דווח תשלום").map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select></div>
+        <div class="st"><select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.filter(s=>s!=="דווח תשלום").map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
     </div>`).join(""):`<div class="empty">${empty}</div>`;
 }
 
@@ -186,7 +188,7 @@ function menuCard(m){
       <div><label>תיאור</label><input data-f="desc" value="${esc(m.desc)}"></div>
       <div><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
       <div><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg"></div>
-      <div><label>פעילה</label><select data-f="active"><option${m.active!=="לא"?" selected":""}>כן</option><option${m.active==="לא"?" selected":""}>לא</option></select></div>
+      <div><label>פעילה</label><select data-f="active"><option${m.active!=="לא"?" selected":""}>כן</option><option${m.active==="לא"?" selected":""}>לא</option></select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
     </div>
     <button class="primary" data-save>שמירה</button>
   </div>`;
