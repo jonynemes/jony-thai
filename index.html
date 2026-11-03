@@ -41,14 +41,14 @@ header::after{content:"";position:absolute;left:6%;right:6%;bottom:3px;height:16
 .chef{position:absolute;z-index:2;margin:0;right:0;bottom:-8px;width:clamp(170px,16.5vw,250px);aspect-ratio:700/964;transform:translateX(62%) rotate(7deg);transform-origin:50% 100%;filter:drop-shadow(0 10px 16px rgba(0,0,0,.5));pointer-events:none}
 .chef img{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%}
 @media (max-width:1000px){.chef{width:clamp(80px,11vw,112px);bottom:calc(100% - 64px);right:-18px;transform:rotate(7deg)}}
-@media (max-width:640px){.chef{width:86px;left:50%;right:auto;bottom:calc(100% - 8px);transform:translateX(-50%)}.collage{grid-auto-rows:110px}}
+@media (max-width:640px){.chef{width:108px;left:50%;right:auto;bottom:calc(100% - 14px);transform:translateX(-50%)}.collage{grid-auto-rows:96px}.htitle{padding:.5rem .9rem}.scroll{padding:.9rem 1.1rem 1.5rem}.scroll::before{right:-8px}.scroll::after{left:-8px}.scroll::before,.scroll::after{width:13px}.arch{width:min(76vw,330px)}}
 @media (max-width:640px){.collage{grid-template-columns:repeat(4,1fr);grid-auto-rows:118px;gap:4px;padding:4px 4px 22px}.collage .street{grid-row:auto;grid-column:span 2}.arch{width:80vw}}
 @media (prefers-reduced-motion:reduce){.collage svg,.collage img{transition:none}}
 header h1{line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
 header p{margin:-.2rem 0 0;color:#f6dc8a;font-weight:600;font-size:clamp(.92rem,2.6vw,1.1rem);letter-spacing:.02em}
 .arch.sub{margin-top:-.6rem}
 .arch.sub text{font-family:'Heebo',sans-serif;font-weight:600;font-size:23px;fill:#f6dc8a;stroke:none;letter-spacing:.5px}
-@media (max-width:640px){.arch.sub text{font-size:28px}}
+@media (max-width:640px){.arch.sub text{font-size:25px}}
 main{max-width:1000px;margin:0 auto;padding:1.4rem 1rem 2.5rem}
 .view{display:none}.view.on{display:block}
 /* כרטיס התפריט – בהשראת התפריט המודפס */
@@ -104,6 +104,7 @@ button:active{transform:scale(.96)}
   .ghost:hover{background:var(--head);color:var(--bg);transform:translateY(-2px)}
   .qb:hover{border-color:var(--saffron);color:var(--saffron);transform:scale(1.1)}
   .qb[data-p]:hover{color:#fff;filter:brightness(1.1);box-shadow:0 4px 12px rgba(232,115,26,.4)}
+  .copybtn:hover{background:var(--head);color:var(--bg)}
   .linkbtn:hover{opacity:1;text-decoration-thickness:2px}
   .paidbtn:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 8px 20px rgba(232,115,26,.4)}
   .pay a:hover,.pay button:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
@@ -118,7 +119,7 @@ button:active{transform:scale(.96)}
 #orderList .row b,#summary .row b{color:var(--price);font-size:1.15rem}
 #summary .row:nth-child(-n+2) b{color:inherit;font-size:inherit}
 #orderList .row:has(+ .sum),#summary .row:has(+ .sum){border-bottom:0}
-#orderList .row.sum,#summary .row.sum{margin-top:.4rem;padding-top:.9rem;border-top:2px solid color-mix(in srgb,var(--gold) 55%,transparent);border-bottom:0;align-items:baseline;font-weight:700;font-size:1.2rem}
+#orderList .row.sum,#summary .row.sum{justify-content:center;gap:.8rem;margin-top:.4rem;padding-top:.9rem;border-top:2px solid color-mix(in srgb,var(--gold) 55%,transparent);border-bottom:0;align-items:baseline;font-weight:700;font-size:1.2rem}
 #orderList .row.sum b,#summary .row.sum b{font-family:'Suez One',serif;font-weight:400;font-size:1.8rem}
 h2{color:var(--head);font-size:2.1rem;margin-bottom:.4rem}
 label{display:block;font-weight:600;margin:.8rem 0 .25rem}
@@ -134,6 +135,12 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
 .bit{background:#3a63b8}.pbx{background:#2b8597}
 .paidbtn{display:block;margin:1.3rem auto 0;padding:.85rem 2.6rem;background:var(--saffron);color:#fff;box-shadow:0 4px 12px rgba(232,115,26,.22)}
 .payhint{margin:0 0 1rem;opacity:.85;line-height:1.6}
+.payphone{display:flex;flex-direction:column;align-items:flex-start;gap:.6rem;margin:0 0 1rem;padding:.8rem 1rem;border-radius:var(--r);background:color-mix(in srgb,var(--gold) 12%,transparent);font-weight:600;font-size:clamp(1rem,4.3vw,1.32rem)}
+.payphone b{color:var(--price);font-size:1.08em;white-space:nowrap}
+.payphone span{width:100%;text-align:center}
+.payphone .copybtn{align-self:center}
+.copybtn{padding:.45rem 1rem;font-size:.92rem;font-weight:600;background:transparent;color:var(--head);box-shadow:inset 0 0 0 1.5px var(--head)}
+.copybtn.done{background:var(--head);color:var(--bg)}
 .paidbtn:disabled{background:transparent;color:var(--head);box-shadow:inset 0 0 0 1.5px var(--head);opacity:.6;cursor:not-allowed}
 .paidbtn:disabled:active{transform:none}
 .linkbtn{display:block;margin:.6rem auto 0;padding:.3rem .6rem;background:none;color:var(--head);font-weight:600;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;opacity:.85}
@@ -159,7 +166,7 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
     <figure class="wide"><img src="images/kids.jpg" alt="" style="object-position:40% 55%"></figure>
     <figure class="wide"><img src="images/view2.jpg" alt="" style="object-position:50% 55%"></figure>
   </div>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><clipPath id="bridge" clipPathUnits="objectBoundingBox"><path d="M0 .18Q.5-.18 1 .18V1Q.5 .78 0 1Z"/></clipPath></svg><div class="htitle"><div class="scroll"><span class="sbg"></span><svg class="sedge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 18Q50-18 100 18V100Q50 78 0 100Z"/><path d="M2 21.5Q50-11 98 21.5V94.5Q50 73.5 2 94.5Z"/></svg><figure class="chef"><img src="images/jony-cutout.png" alt=""></figure><h1><span class="sr">התאילנדי של ג'וני</span><svg class="arch" viewBox="0 10 600 128" aria-hidden="true"><path id="arcH" d="M20 128 Q300 48 580 128" fill="none"/><text><textPath href="#arcH" startOffset="50%" text-anchor="middle">התאילנדי של ג'וני</textPath></text></svg></h1><p><span class="sr">מנות תאילנדיות חמות, מוכנות לאיסוף</span><svg class="arch sub" viewBox="0 0 600 56" aria-hidden="true"><path id="arcS" d="M90 46 Q300 22 510 46" fill="none"/><text><textPath href="#arcS" startOffset="50%" text-anchor="middle">✦  מנות תאילנדיות חמות, מוכנות לאיסוף  ✦</textPath></text></svg></p></div></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><clipPath id="bridge" clipPathUnits="objectBoundingBox"><path d="M0 .18Q.5-.18 1 .18V1Q.5 .78 0 1Z"/></clipPath></svg><div class="htitle"><div class="scroll"><span class="sbg"></span><svg class="sedge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 18Q50-18 100 18V100Q50 78 0 100Z"/><path d="M2 21.5Q50-11 98 21.5V94.5Q50 73.5 2 94.5Z"/></svg><figure class="chef"><img src="images/jony-cutout.png" alt=""></figure><h1><span class="sr">התאילנדי של ג'וני</span><svg class="arch" viewBox="0 10 600 128" aria-hidden="true"><path id="arcH" d="M20 128 Q300 48 580 128" fill="none"/><text><textPath href="#arcH" startOffset="50%" text-anchor="middle">התאילנדי של ג'וני</textPath></text></svg></h1><p><span class="sr">מנות תאילנדיות חמות, מוכנות לאיסוף</span><svg class="arch sub" viewBox="0 0 600 56" aria-hidden="true"><path id="arcS" d="M40 46 Q300 22 560 46" fill="none"/><text><textPath href="#arcS" startOffset="50%" text-anchor="middle">✦  מנות תאילנדיות חמות, מוכנות לאיסוף  ✦</textPath></text></svg></p></div></div>
 </header>
 <main>
   <section id="v-menu" class="view on"><div id="menu"></div></section>
@@ -179,10 +186,11 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
     <div class="box"><h2 class="subhead">סיכום הזמנה</h2><div id="summary"></div></div>
     <div class="box">
       <h3 class="subhead">תשלום</h3>
+      <div class="payphone"><span>ניתן לשלם בביט או בפייבוקס לטלפון מספר <b dir="ltr" id="payPhoneTxt">054-474-2232</b></span><button type="button" class="copybtn" id="cpPhone">העתקת המספר</button></div>
       <p class="payhint">לאחר העברת התשלום, יש ללחוץ על הכפתור <b>״שילמתי – דווח תשלום״</b> לאישור התשלום.</p>
       <div class="pay">
-        <a class="bit" id="bitLink" href="#">תשלום בביט</a>
-        <a class="pbx" id="pbxLink" href="#">תשלום בפייבוקס</a>
+        <a class="bit" id="bitLink" href="#">מעבר לתשלום בביט</a>
+        <a class="pbx" id="pbxLink" href="#">מעבר לתשלום בפייבוקס</a>
       </div>
       <button class="paidbtn" id="paid" disabled>שילמתי – דווח תשלום</button>
       <p id="status" aria-live="polite"></p>
@@ -284,6 +292,7 @@ function checkout(){
   $("#summary").insertAdjacentHTML("beforeend",`<div class="row sum"><span>סה״כ לתשלום</span><b><span class="nis">₪</span>${t}</b></div>`);
   $("#bitLink").href=CONFIG.BIT_LINK;$("#pbxLink").href=CONFIG.PAYBOX_LINK;
   $("#paid").disabled=true;
+  $("#payPhoneTxt").textContent=CONFIG.PAY_PHONE.replace(/\D/g,"").replace(/^(\d{3})(\d{3})(\d{4})$/,"$1-$2-$3");
   $("#status").textContent="";
   go("checkout");
   send("חדשה"); // רושם את ההזמנה בטבלה מיד עם סיום ההזמנה
@@ -308,6 +317,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("input",e=>{const id=e.target.dataset.note;if(!id)return;NOTES[id]=e.target.value;if(cart[id])cart[id].note=e.target.value});
 $("#toCheckout").onclick=checkout;
+$("#cpPhone").onclick=async e=>{const b=e.currentTarget;b.textContent="✓ המספר הועתק";b.classList.add("done");clearTimeout(b._t);b._t=setTimeout(()=>{b.textContent="העתקת המספר";b.classList.remove("done")},2200);copy(CONFIG.PAY_PHONE.replace(/\D/g,""))};
 ["#bitLink","#pbxLink"].forEach(s=>$(s).addEventListener("click",()=>{$("#paid").disabled=false}));
 $("#paid").onclick=async()=>{
   loading("שולח את הדיווח...");
