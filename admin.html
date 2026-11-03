@@ -14,7 +14,7 @@ body{margin:0;font-family:'Heebo',system-ui,sans-serif;background:var(--bg);colo
 h1,h2{font-family:'Suez One',serif;font-weight:400;margin:0}
 header{background:var(--jade);color:var(--gold2);padding:1rem;border-bottom:4px solid var(--gold);display:flex;justify-content:space-between;align-items:center;gap:1rem}
 header h1{font-size:1.5rem}
-main{max-width:900px;margin:0 auto;padding:1rem}
+main{max-width:1150px;margin:0 auto;padding:1rem 1.2rem}
 button,select{font:inherit}
 button{cursor:pointer;border:0;border-radius:999px;padding:.55rem 1.1rem;font-weight:800}
 .primary{background:var(--saffron);color:#fff}
@@ -51,8 +51,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .of select{width:auto;min-width:9rem}
 .st{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .paybadge{font-size:.85rem;font-weight:700;color:#fff;background:#c8102e;padding:.3rem .7rem;border-radius:8px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-bottom:.6rem}
-.grid2 label{font-size:.85rem;font-weight:600;display:block}
+.grid2{display:grid;grid-template-columns:repeat(6,1fr);gap:.9rem 1.1rem;margin-bottom:.9rem}
+.f-name{grid-column:span 3}.f-price,.f-cat,.f-act{grid-column:span 1}.f-desc{grid-column:1/-1}.f-img{grid-column:span 3}
+.grid2 input,.grid2 select,.grid2 textarea{padding:.7rem .85rem;font-size:1.02rem}
+.grid2 textarea{resize:vertical;line-height:1.5}
+@media (max-width:700px){.grid2{grid-template-columns:1fr 1fr}.f-name,.f-desc,.f-img{grid-column:1/-1}.f-price,.f-cat,.f-act{grid-column:span 1}}
+.grid2 label{font-size:.9rem;font-weight:600;display:block;margin-bottom:.25rem;opacity:.85}
 #login{max-width:380px;margin:3rem auto;text-align:center}
 .pw{position:relative;margin:.8rem 0}
 .pw input{padding-inline-end:3rem;margin:0}
@@ -183,12 +187,12 @@ function menuCard(m){
   m=m||{row:0,cat:"",name:"",desc:"",price:"",active:"כן",img:""};
   return `<div class="card" data-row="${m.row}">
     <div class="grid2">
-      <div><label>שם</label><input data-f="name" value="${esc(m.name)}"></div>
-      <div><label>מחיר</label><input data-f="price" type="number" min="0" inputmode="numeric" value="${esc(m.price)}"></div>
-      <div><label>תיאור</label><input data-f="desc" value="${esc(m.desc)}"></div>
-      <div><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
-      <div><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg"></div>
-      <div><label>פעילה</label><select data-f="active"><option${m.active!=="לא"?" selected":""}>כן</option><option${m.active==="לא"?" selected":""}>לא</option></select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
+      <div class="f-name"><label>שם המנה</label><input data-f="name" value="${esc(m.name)}"></div>
+      <div class="f-price"><label>מחיר בש״ח</label><input data-f="price" type="number" min="0" inputmode="numeric" value="${esc(m.price)}"></div>
+      <div class="f-cat"><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
+      <div class="f-act"><label>פעילה</label><select data-f="active"><option${m.active!=="לא"?" selected":""}>כן</option><option${m.active==="לא"?" selected":""}>לא</option></select></div>
+      <div class="f-desc"><label>תיאור</label><textarea data-f="desc" rows="3">${esc(m.desc)}</textarea></div>
+      <div class="f-img"><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg" dir="ltr"></div>
     </div>
     <button class="primary" data-save>שמירה</button>
   </div>`;
