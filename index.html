@@ -194,11 +194,7 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
       <h3 class="subhead">תשלום</h3>
       <div class="payphone"><span>ניתן לשלם בביט או בפייבוקס לטלפון מספר <b dir="ltr" id="payPhoneTxt">054-474-2232</b></span><button type="button" class="copybtn" id="cpPhone">העתקת המספר</button></div>
       <p class="payhint">לאחר העברת התשלום, יש ללחוץ על הכפתור <b>״שילמתי – דווח תשלום״</b> לאישור התשלום.</p>
-      <div class="pay">
-        <a class="bit" id="bitLink" href="#">מעבר לתשלום בביט</a>
-        <a class="pbx" id="pbxLink" href="#">מעבר לתשלום בפייבוקס</a>
-      </div>
-      <button class="paidbtn" id="paid" disabled>שילמתי – דווח תשלום</button>
+      <button class="paidbtn" id="paid">שילמתי – דווח תשלום</button>
       <p id="status" aria-live="polite"></p>
       <button class="linkbtn" id="newOrder">הזמנה חדשה</button>
     </div>
@@ -296,8 +292,7 @@ function checkout(){
     lines().map(l=>`<div class="row"><span>${l.qty} × ${l.name}${l.note?`<br><small>${esc(l.note)}</small>`:""}</span><b>${money(l.qty*l.price)}</b></div>`).join("")+
     ($("#gnote").value.trim()?`<div class="row"><span>הערה</span><span>${esc($("#gnote").value.trim())}</span></div>`:"");
   $("#summary").insertAdjacentHTML("beforeend",`<div class="row sum"><span>סה״כ לתשלום</span><b><span class="nis">₪</span>${t}</b></div>`);
-  $("#bitLink").href=CONFIG.BIT_LINK;$("#pbxLink").href=CONFIG.PAYBOX_LINK;
-  $("#paid").disabled=true;
+
   $("#payPhoneTxt").textContent=CONFIG.PAY_PHONE.replace(/\D/g,"").replace(/^(\d{3})(\d{3})(\d{4})$/,"$1-$2-$3");
   $("#status").textContent="";
   go("checkout");
@@ -324,7 +319,6 @@ document.addEventListener("click",e=>{
 document.addEventListener("input",e=>{const id=e.target.dataset.note;if(!id)return;NOTES[id]=e.target.value;if(cart[id])cart[id].note=e.target.value});
 $("#toCheckout").onclick=checkout;
 $("#cpPhone").onclick=async e=>{const b=e.currentTarget;b.textContent="✓ המספר הועתק";b.classList.add("done");clearTimeout(b._t);b._t=setTimeout(()=>{b.textContent="העתקת המספר";b.classList.remove("done")},2200);copy(CONFIG.PAY_PHONE.replace(/\D/g,""))};
-["#bitLink","#pbxLink"].forEach(s=>$(s).addEventListener("click",()=>{$("#paid").disabled=false}));
 $("#paid").onclick=async()=>{
   loading("שולח את הדיווח...");
   const ok=await send("דווח תשלום");
