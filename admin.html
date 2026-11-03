@@ -35,6 +35,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media (max-width:640px){.refresh{position:static}}
 .tabs .tab{background:var(--card);border:2px solid var(--line);color:var(--ink)}
 .tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
+.tabs .tab.on[data-tab="new"]{background:#e8731a;border-color:#e8731a;color:#fff}
+.tabs .tab.on[data-tab="paid"]{background:#2f7de1;border-color:#2f7de1;color:#fff}
+.tabs .tab.on[data-tab="prep"]{background:#8e5bd8;border-color:#8e5bd8;color:#fff}
+.tabs .tab.on[data-tab="ready"]{background:#2e9d5b;border-color:#2e9d5b;color:#fff}
+.tabs .tab.on[data-tab="done"]{background:#8a8f8c;border-color:#8a8f8c;color:#fff}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
 .tabs label input{width:auto}
 .card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:12px;padding:.9rem 1rem;margin:.8rem 0}
