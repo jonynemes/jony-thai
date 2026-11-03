@@ -44,7 +44,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-bottom:.6rem}
 .grid2 label{font-size:.85rem;font-weight:600;display:block}
 #login{max-width:380px;margin:3rem auto;text-align:center}
-#login input{margin:.8rem 0}
+.pw{position:relative;margin:.8rem 0}
+.pw input{padding-inline-end:3rem;margin:0}
+.eye{position:absolute;inset-block:0;inset-inline-end:.3rem;background:transparent;color:var(--jade2);padding:0 .7rem;border-radius:10px}
+@media (prefers-color-scheme:dark){.eye{color:var(--gold2)}}
+#login input{margin:0}
 .err{color:#c8102e;min-height:1.4em;font-weight:600}
 .empty{text-align:center;opacity:.7;padding:2rem}
 #toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold2);padding:.6rem 1.1rem;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5;font-weight:600}
@@ -58,7 +62,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <section id="login">
     <h2>כניסה</h2>
     <p>הזינו את מפתח הניהול.</p>
-    <input id="key" type="password" autocomplete="current-password" aria-label="מפתח ניהול">
+    <div class="pw">
+      <input id="key" type="password" autocomplete="current-password" aria-label="מפתח ניהול">
+      <button type="button" class="eye" id="eye" aria-label="הצגת המפתח" aria-pressed="false">
+        <svg id="eyeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
     <div class="err" id="err" role="alert"></div>
     <button class="primary" id="enter">כניסה</button>
   </section>
@@ -180,6 +189,17 @@ document.addEventListener("click",async e=>{
     toast("נשמר");await loadMenu();
   }
 });
+
+$("#eye").onclick=()=>{
+  const k=$("#key"),show=k.type==="password";
+  k.type=show?"text":"password";
+  $("#eye").setAttribute("aria-pressed",show);
+  $("#eye").setAttribute("aria-label",show?"הסתרת המפתח":"הצגת המפתח");
+  $("#eyeIcon").innerHTML=show
+    ?'<path d="M17.94 17.94A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12A3 3 0 1 1 9.88 9.88"/><path d="M1 1l22 22"/>'
+    :'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>';
+  k.focus();
+};
 $("#enter").onclick=login;
 $("#key").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
 $("#logout").onclick=()=>{try{localStorage.removeItem("jt_admin_key")}catch(e){};KEY="";known=null;showLogin("")};
