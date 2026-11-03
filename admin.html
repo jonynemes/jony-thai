@@ -61,6 +61,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #loader{position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:.6rem;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:.55rem 1.1rem;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:600}
 .spin{width:1.2rem;height:1.2rem;border:3px solid var(--line);border-top-color:var(--saffron);border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.spin.sm{display:inline-block;width:1rem;height:1rem;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:#fff;vertical-align:-.15em;margin-inline-end:.35rem}
+#enter:disabled{opacity:.85;cursor:wait}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -227,7 +229,9 @@ $("#logout").onclick=()=>{try{localStorage.removeItem("jt_admin_key")}catch(e){}
 async function login(){
   KEY=$("#key").value.trim();if(!KEY)return;
   try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();audio.resume()}catch(e){} // מאשר שמע בדפדפן בשקט, בלי צפצוף
+  const btn=$("#enter");btn.disabled=true;btn.innerHTML=`<span class="spin sm"></span> מתחבר…`;
   const ok=await loadOrders(true);
+  btn.disabled=false;btn.textContent="כניסה";
   if(ok){try{localStorage.setItem("jt_admin_key",KEY)}catch(e){}start()}
 }
 function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&!document.hidden)loadOrders()},30000)}
