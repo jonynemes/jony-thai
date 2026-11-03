@@ -28,7 +28,11 @@ button{cursor:pointer;border:0;border-radius:999px;padding:.55rem 1.1rem;font-we
 header .ghost{border-color:var(--gold2);color:var(--gold2)}
 input,select,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-.tabs{display:flex;gap:.5rem;margin:.5rem 0 1rem;flex-wrap:wrap;align-items:center;justify-content:center}
+.tabs{display:flex;gap:.5rem;margin:.5rem 0 1rem;flex-wrap:wrap;align-items:center;justify-content:center;position:relative;min-height:2.7rem}
+.refresh{position:absolute;left:0;display:inline-flex;align-items:center;gap:.45rem;background:#4a84d4;color:#fff;box-shadow:0 2px 8px rgba(74,132,212,.3)}
+.refresh:hover{background:#3d74c2}
+.refresh.spinning svg{animation:sp .8s linear infinite}
+@media (max-width:640px){.refresh{position:static}}
 .tabs .tab{background:var(--card);border:2px solid var(--line);color:var(--ink)}
 .tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
@@ -105,7 +109,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="tab" data-tab="prep">בהכנה <span data-cnt="prep"></span></button>
       <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
       <button class="tab" data-tab="done">נמסרה <span data-cnt="done"></span></button>
-      <button class="ghost" id="refresh">רענון</button>
+      <button class="refresh" id="refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>רענון</button>
     </div>
     <div id="orders"></div>
     <div id="menu" hidden></div>
@@ -126,7 +130,7 @@ try{KEY=localStorage.getItem("jt_admin_key")||""}catch(e){}
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),2200)}
 function beep(){try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(audio.currentTime+.25)}catch(e){}}
 
-let busyN=0;function busy(d){busyN=Math.max(0,busyN+d);$("#loader").hidden=!busyN}
+let busyN=0;function busy(d){busyN=Math.max(0,busyN+d);$("#loader").hidden=!busyN;$("#refresh").classList.toggle("spinning",busyN>0)}
 async function get(action){busy(1);try{
   const r=await fetch(SHEETS_URL+"?action="+action+"&key="+encodeURIComponent(KEY));
   return await r.json();
