@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ניהול · התאילנדי של ג'וני</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Suez+One&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1f5ef;--ink:#13302d;--jade:#0f3d3a;--jade2:#17524d;--gold:#c79a3b;--gold2:#e6c778;--saffron:#e8731a;--card:#fffdf8;--line:#dfd6bd;--ok:#2e7d4f}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1f1d;--ink:#f3ecd6;--jade:#06201e;--jade2:#0f3d3a;--gold:#e0b351;--gold2:#f0d58a;--saffron:#f58a35;--card:#13302d;--line:#2a4b46;--ok:#6fd49a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Heebo',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+h1,h2{font-family:'Suez One',serif;font-weight:400;margin:0}
+header{background:var(--jade);color:var(--gold2);padding:1rem;border-bottom:4px solid var(--gold);display:flex;justify-content:space-between;align-items:center;gap:1rem}
+header h1{font-size:1.5rem}
+main{max-width:900px;margin:0 auto;padding:1rem}
+button,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:999px;padding:.55rem 1.1rem;font-weight:800}
+.primary{background:var(--saffron);color:#fff}
+.ghost{background:transparent;border:2px solid var(--jade2);color:var(--jade2)}
+header .ghost{border-color:var(--gold2);color:var(--gold2)}
+input,select,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+.tabs{display:flex;gap:.5rem;margin:.5rem 0 1rem;flex-wrap:wrap;align-items:center}
+.tabs .tab{background:var(--card);border:2px solid var(--line);color:var(--ink)}
+.tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
+.tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
+.tabs label input{width:auto}
+.card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:4px 16px 4px 16px;padding:.9rem 1rem;margin:.8rem 0}
+.card[data-s="חדשה"],.card[data-s="דווח תשלום"]{border-inline-start-color:var(--saffron)}
+.card[data-s="נמסרה"]{opacity:.65;border-inline-start-color:var(--line)}
+.card[data-s="מוכנה"]{border-inline-start-color:var(--ok)}
+.oh{display:flex;justify-content:space-between;gap:1rem;font-weight:800}
+.oh span{font-weight:400;opacity:.75}
+.who{margin:.3rem 0}
+.who a{color:var(--jade2);font-weight:600}
+@media (prefers-color-scheme:dark){.who a{color:var(--gold2)}}
+.items{white-space:pre-line;background:var(--bg);border-radius:8px;padding:.5rem .7rem;margin:.5rem 0}
+.onote{font-style:italic;margin:.3rem 0}
+.of{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.of b{font-family:'Suez One',serif;font-size:1.4rem;color:var(--saffron);font-weight:400}
+.of select{width:auto;min-width:9rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-bottom:.6rem}
+.grid2 label{font-size:.85rem;font-weight:600;display:block}
+#login{max-width:380px;margin:3rem auto;text-align:center}
+#login input{margin:.8rem 0}
+.err{color:#c8102e;min-height:1.4em;font-weight:600}
+.empty{text-align:center;opacity:.7;padding:2rem}
+#toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold2);padding:.6rem 1.1rem;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5;font-weight:600}
+#toast.on{opacity:1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>ניהול · התאילנדי של ג'וני</h1><button class="ghost" id="logout" hidden>התנתקות</button></header>
+<main>
+  <section id="login">
+    <h2>כניסה</h2>
+    <p>הזינו את מפתח הניהול.</p>
+    <input id="key" type="password" autocomplete="current-password" aria-label="מפתח ניהול">
+    <div class="err" id="err" role="alert"></div>
+    <button class="primary" id="enter">כניסה</button>
+  </section>
+
+  <section id="app" hidden>
+    <div class="tabs">
+      <button class="tab on" data-tab="orders">הזמנות <span id="cnt"></span></button>
+      <button class="tab" data-tab="menu">תפריט</button>
+      <button class="ghost" id="refresh">רענון</button>
+      <label id="doneLbl"><input type="checkbox" id="showDone"> הצג גם הזמנות שנמסרו</label>
+    </div>
+    <div id="orders"></div>
+    <div id="menu" hidden></div>
+  </section>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+const SHEETS_URL="https://script.google.com/macros/s/AKfycbxHnb1rh7o6rO2AN9aVRK-nHPhqIECX-4FyEIpjVhUoq5H4F_dAc0Q4EjD1OW-AM-rclQ/exec";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let KEY="",STATUSES=[],known=null,tab="orders",ORDERS=[],timer=null,audio=null;
+
+try{KEY=localStorage.getItem("jt_admin_key")||""}catch(e){}
+
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),2200)}
+function beep(){try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(audio.currentTime+.25)}catch(e){}}
+
+async function get(action){
+  const r=await fetch(SHEETS_URL+"?action="+action+"&key="+encodeURIComponent(KEY));
+  return r.json();
+}
+async function post(body){
+  await fetch(SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});
+}
+function showLogin(msg){
+  $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#err").textContent=msg||"";
+  clearInterval(timer);
+}
+function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").hidden=false}
+
+async function loadOrders(initial){
+  try{
+    const d=await get("orders");
+    if(d.error){showLogin("המפתח שגוי.");return false}
+    STATUSES=d.statuses;ORDERS=d.orders;
+    const nos=new Set(ORDERS.map(o=>o.orderNo));
+    if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
+    known=nos;
+    showApp();renderOrders();return true;
+  }catch(e){if(initial)showLogin("שגיאת חיבור. נסו שוב.");else toast("שגיאת חיבור");return false}
+}
+function fmtTime(t){const d=new Date(t);return isNaN(d)?"":d.toLocaleString("he-IL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972"+n.slice(1);return "https://wa.me/"+n}
+
+function renderOrders(){
+  const showDone=$("#showDone").checked;
+  const list=ORDERS.filter(o=>showDone||o.status!=="נמסרה");
+  const open=ORDERS.filter(o=>o.status!=="נמסרה").length;
+  $("#cnt").textContent=open?"("+open+")":"";
+  $("#orders").innerHTML=list.length?list.map(o=>`
+    <div class="card" data-s="${esc(o.status)}">
+      <div class="oh"><span>#${esc(o.orderNo)}</span><span>${fmtTime(o.time)}</span></div>
+      <div class="who"><b>${esc(o.name)}</b> · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · <a href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
+      <div class="items">${esc(o.items)}</div>
+      ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
+      <div class="of"><b>₪${esc(o.total)}</b>
+        <select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.map(s=>`<option${s===o.status?" selected":""}>${s}</option>`).join("")}</select></div>
+    </div>`).join(""):'<div class="empty">אין הזמנות פתוחות.</div>';
+}
+
+async function loadMenu(){
+  try{
+    const d=await get("menuall");
+    if(d.error){showLogin("המפתח שגוי.");return}
+    const rows=d.menu.map(m=>menuCard(m)).join("");
+    $("#menu").innerHTML=rows+'<button class="primary" id="addDish">+ הוספת מנה</button>';
+  }catch(e){toast("שגיאת חיבור")}
+}
+function menuCard(m){
+  m=m||{row:0,cat:"",name:"",desc:"",price:"",active:"כן",img:""};
+  return `<div class="card" data-row="${m.row}">
+    <div class="grid2">
+      <div><label>שם</label><input data-f="name" value="${esc(m.name)}"></div>
+      <div><label>מחיר</label><input data-f="price" type="number" min="0" inputmode="numeric" value="${esc(m.price)}"></div>
+      <div><label>תיאור</label><input data-f="desc" value="${esc(m.desc)}"></div>
+      <div><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
+      <div><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg"></div>
+      <div><label>פעילה</label><select data-f="active"><option${m.active!=="לא"?" selected":""}>כן</option><option${m.active==="לא"?" selected":""}>לא</option></select></div>
+    </div>
+    <button class="primary" data-save>שמירה</button>
+  </div>`;
+}
+
+document.addEventListener("change",async e=>{
+  const sel=e.target.closest("select[data-no]");
+  if(sel){
+    await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
+    toast("הסטטוס עודכן");await loadOrders();
+  }
+  if(e.target.id==="showDone")renderOrders();
+});
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.tab){
+    tab=b.dataset.tab;
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===b));
+    $("#orders").hidden=tab!=="orders";$("#menu").hidden=tab!=="menu";$("#doneLbl").hidden=tab!=="orders";
+    if(tab==="menu")loadMenu();else loadOrders();
+  }
+  else if(b.id==="refresh"){tab==="orders"?loadOrders():loadMenu()}
+  else if(b.id==="addDish"){b.insertAdjacentHTML("beforebegin",menuCard());b.previousElementSibling.querySelector("input").focus()}
+  else if(b.dataset.save!==undefined){
+    const c=b.closest(".card"),item={row:Number(c.dataset.row)};
+    c.querySelectorAll("[data-f]").forEach(i=>item[i.dataset.f]=i.value.trim());
+    if(!item.name||item.price===""){toast("חסר שם או מחיר");return}
+    b.disabled=true;
+    await post({action:item.row?"saveMenuRow":"addMenuRow",item});
+    toast("נשמר");await loadMenu();
+  }
+});
+$("#enter").onclick=login;
+$("#key").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+$("#logout").onclick=()=>{try{localStorage.removeItem("jt_admin_key")}catch(e){};KEY="";known=null;showLogin("")};
+async function login(){
+  KEY=$("#key").value.trim();if(!KEY)return;
+  beep(); // פותח את אישור השמע בדפדפן
+  const ok=await loadOrders(true);
+  if(ok){try{localStorage.setItem("jt_admin_key",KEY)}catch(e){}start()}
+}
+function start(){clearInterval(timer);timer=setInterval(()=>{if(tab==="orders"&&!document.hidden)loadOrders()},30000)}
+if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
+</script>
+</body>
+</html>
