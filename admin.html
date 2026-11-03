@@ -27,10 +27,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
 .tabs label input{width:auto}
-.card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:4px 16px 4px 16px;padding:.9rem 1rem;margin:.8rem 0}
-.card[data-s="חדשה"],.card[data-s="דווח תשלום"]{border-inline-start-color:var(--saffron)}
-.card[data-s="נמסרה"]{opacity:.65;border-inline-start-color:var(--line)}
-.card[data-s="מוכנה"]{border-inline-start-color:var(--ok)}
+.card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:12px;padding:.9rem 1rem;margin:.8rem 0}
+.card[data-s="חדשה"]{border-inline-start-color:#e8731a}
+.card[data-s="דווח תשלום"]{border-inline-start-color:#c8102e}
+.card[data-s="שולם"]{border-inline-start-color:#2f7de1}
+.card[data-s="בהכנה"]{border-inline-start-color:#8e5bd8}
+.card[data-s="מוכנה"]{border-inline-start-color:#2e9d5b}
+.card[data-s="נמסרה"]{border-inline-start-color:#8a8f8c;opacity:.7}
 .oh{display:flex;justify-content:space-between;gap:1rem;font-weight:800}
 .oh span{font-weight:400;opacity:.75}
 .who{margin:.3rem 0}
@@ -43,7 +46,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .nis{font-family:'Heebo',sans-serif;font-weight:700;font-size:.85em}
 .items{white-space:pre-line;background:var(--bg);border-radius:8px;padding:.5rem .7rem;margin:.5rem 0}
 .onote{font-style:italic;margin:.3rem 0}
-.of{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.of{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;gap:1rem}
 .of b{font-family:'Suez One',serif;font-size:1.4rem;color:var(--saffron);font-weight:400}
 .of select{width:auto;min-width:9rem}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-bottom:.6rem}
