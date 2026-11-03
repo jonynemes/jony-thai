@@ -14,6 +14,11 @@ body{margin:0;font-family:'Heebo',system-ui,sans-serif;background:var(--bg);colo
 h1,h2{font-family:'Suez One',serif;font-weight:400;margin:0}
 header{background:var(--jade);color:var(--gold2);padding:1rem;border-bottom:4px solid var(--gold);display:flex;justify-content:space-between;align-items:center;gap:1rem}
 header h1{font-size:1.5rem}
+.views{display:flex;gap:.4rem;background:rgba(0,0,0,.18);padding:.3rem;border-radius:12px;margin-inline-start:auto}
+.view{background:transparent;color:var(--gold2);padding:.5rem 1.3rem;border-radius:9px;font-weight:700}
+.view.on{background:var(--gold2);color:var(--jade)}
+@media (hover:hover){.view:not(.on):hover{background:rgba(255,255,255,.08)}}
+@media (max-width:640px){header{flex-wrap:wrap}.views{order:3;width:100%;margin:0}.view{flex:1}}
 main{max-width:1150px;margin:0 auto;padding:1rem 1.2rem}
 button,select{font:inherit}
 button{cursor:pointer;border:0;border-radius:999px;padding:.55rem 1.1rem;font-weight:800}
@@ -45,7 +50,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .cl{display:block;width:100%;font-size:.78rem;font-weight:700;opacity:.6;margin-bottom:.1rem}
 .nis{font-family:'Heebo',sans-serif;font-weight:700;font-size:.85em}
 .items{white-space:pre-line;background:var(--bg);border-radius:8px;padding:.5rem .7rem;margin:.5rem 0}
-.onote{font-style:italic;margin:.3rem 0}
+.onote{font-style:italic;margin:.4rem 0;color:#e5484d;font-weight:600}
 .of{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;gap:1rem}
 .of b{font-family:'Suez One',serif;font-size:1.4rem;color:var(--saffron);font-weight:400}
 .of select{width:auto;min-width:9rem}
@@ -76,7 +81,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </style>
 </head>
 <body>
-<header><h1>ניהול · התאילנדי של ג'וני</h1><button class="ghost" id="logout" hidden>התנתקות</button></header>
+<header><h1>ניהול · התאילנדי של ג'וני</h1><nav class="views" id="views" hidden><button class="view on" data-view="orders">הזמנות</button><button class="view" data-view="menu">תפריט</button></nav><button class="ghost" id="logout" hidden>התנתקות</button></header>
 <main>
   <section id="login">
     <h2>כניסה</h2>
@@ -99,7 +104,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="tab" data-tab="prep">בהכנה <span data-cnt="prep"></span></button>
       <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
       <button class="tab" data-tab="done">נמסרה <span data-cnt="done"></span></button>
-      <button class="tab" data-tab="menu">תפריט</button>
       <button class="ghost" id="refresh">רענון</button>
     </div>
     <div id="orders"></div>
@@ -113,6 +117,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 const SHEETS_URL="https://script.google.com/macros/s/AKfycbxHnb1rh7o6rO2AN9aVRK-nHPhqIECX-4FyEIpjVhUoq5H4F_dAc0Q4EjD1OW-AM-rclQ/exec";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let lastTab="new";
 let KEY="",STATUSES=[],known=null,tab="new",ORDERS=[],timer=null,audio=null;
 
 try{KEY=localStorage.getItem("jt_admin_key")||""}catch(e){}
@@ -129,10 +134,10 @@ async function post(body){
   busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{busy(-1)}
 }
 function showLogin(msg){
-  $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#err").textContent=msg||"";
+  $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#views").hidden=true;$("#err").textContent=msg||"";
   clearInterval(timer);
 }
-function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").hidden=false}
+function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").hidden=false;$("#views").hidden=false}
 
 async function loadOrders(initial){
   try{
@@ -211,7 +216,16 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.tab){
+  if(b.dataset.view){
+    const menu=b.dataset.view==="menu";
+    document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v===b));
+    document.querySelectorAll(".tab").forEach(t=>t.hidden=menu);
+    if(menu){if(tab!=="menu")lastTab=tab;tab="menu"}else{tab=lastTab}
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
+    $("#orders").hidden=menu;$("#menu").hidden=!menu;
+    if(menu)loadMenu();else loadOrders();
+  }
+  else if(b.dataset.tab){
     tab=b.dataset.tab;
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===b));
     $("#orders").hidden=tab==="menu";$("#menu").hidden=tab!=="menu";
