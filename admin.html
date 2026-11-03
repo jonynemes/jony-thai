@@ -58,6 +58,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .empty{text-align:center;opacity:.7;padding:2rem}
 #toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold2);padding:.6rem 1.1rem;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:5;font-weight:600}
 #toast.on{opacity:1}
+#loader{position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:.6rem;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:.55rem 1.1rem;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:600}
+.spin{width:1.2rem;height:1.2rem;border:3px solid var(--line);border-top-color:var(--saffron);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -79,35 +82,40 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
   <section id="app" hidden>
     <div class="tabs">
-      <button class="tab on" data-tab="orders">הזמנות <span id="cnt"></span></button>
-      <button class="tab" data-tab="paid">הזמנות מאושרות <span id="cntPaid"></span></button>
+      <button class="tab" data-tab="all">הכל <span data-cnt="all"></span></button>
+      <button class="tab on" data-tab="new">חדשות <span data-cnt="new"></span></button>
+      <button class="tab" data-tab="paid">שולמו <span data-cnt="paid"></span></button>
+      <button class="tab" data-tab="prep">בהכנה <span data-cnt="prep"></span></button>
+      <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
+      <button class="tab" data-tab="done">נמסרה <span data-cnt="done"></span></button>
       <button class="tab" data-tab="menu">תפריט</button>
       <button class="ghost" id="refresh">רענון</button>
-      <label id="doneLbl" hidden><input type="checkbox" id="showDone"> הצג גם הזמנות שנמסרו</label>
     </div>
     <div id="orders"></div>
     <div id="menu" hidden></div>
   </section>
 </main>
+<div id="loader" hidden role="status" aria-label="טוען"><div class="spin"></div><span>טוען…</span></div>
 <div id="toast" role="status"></div>
 
 <script>
 const SHEETS_URL="https://script.google.com/macros/s/AKfycbxHnb1rh7o6rO2AN9aVRK-nHPhqIECX-4FyEIpjVhUoq5H4F_dAc0Q4EjD1OW-AM-rclQ/exec";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let KEY="",STATUSES=[],known=null,tab="orders",ORDERS=[],timer=null,audio=null;
+let KEY="",STATUSES=[],known=null,tab="new",ORDERS=[],timer=null,audio=null;
 
 try{KEY=localStorage.getItem("jt_admin_key")||""}catch(e){}
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),2200)}
 function beep(){try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(audio.currentTime+.25)}catch(e){}}
 
-async function get(action){
+let busyN=0;function busy(d){busyN=Math.max(0,busyN+d);$("#loader").hidden=!busyN}
+async function get(action){busy(1);try{
   const r=await fetch(SHEETS_URL+"?action="+action+"&key="+encodeURIComponent(KEY));
-  return r.json();
-}
+  return await r.json();
+}finally{busy(-1)}}
 async function post(body){
-  await fetch(SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});
+  busy(1);try{await fetch(SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})})}finally{busy(-1)}
 }
 function showLogin(msg){
   $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#err").textContent=msg||"";
@@ -133,16 +141,14 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
-const PENDING=["חדשה","דווח תשלום"];
-const isPaid=o=>!PENDING.includes(o.status);
+// סינון לפי סטטוס
+const FILTERS={new:["חדשה","דווח תשלום"],paid:["שולם"],prep:["בהכנה"],ready:["מוכנה"],done:["נמסרה"]};
+const inTab=(o,t)=>t==="all"||(FILTERS[t]||[]).includes(o.status);
+const EMPTY={all:"אין הזמנות.",new:"אין הזמנות חדשות.",paid:"אין הזמנות ששולמו.",prep:"אין הזמנות בהכנה.",ready:"אין הזמנות מוכנות.",done:"אין הזמנות שנמסרו."};
 function renderOrders(){
-  const showDone=$("#showDone").checked;
-  const pending=ORDERS.filter(o=>!isPaid(o));
-  const paidOpen=ORDERS.filter(o=>isPaid(o)&&o.status!=="נמסרה");
-  $("#cnt").textContent=pending.length?"("+pending.length+")":"";
-  $("#cntPaid").textContent=paidOpen.length?"("+paidOpen.length+")":"";
-  const list=tab==="paid"?ORDERS.filter(o=>isPaid(o)&&(showDone||o.status!=="נמסרה")):pending;
-  const empty=tab==="paid"?"אין הזמנות מאושרות.":"אין הזמנות שממתינות לתשלום.";
+  document.querySelectorAll("[data-cnt]").forEach(s=>{const t=s.dataset.cnt,n=ORDERS.filter(o=>inTab(o,t)).length;s.textContent=n?"("+n+")":""});
+  const list=ORDERS.filter(o=>inTab(o,tab));
+  const empty=EMPTY[tab]||"אין הזמנות.";
   $("#orders").innerHTML=list.length?list.map(o=>`
     <div class="card" data-s="${esc(o.status)}">
       <div class="oh"><span>#${esc(o.orderNo)}</span><span>${fmtTime(o.time)}</span></div>
@@ -182,16 +188,15 @@ document.addEventListener("change",async e=>{
   const sel=e.target.closest("select[data-no]");
   if(sel){
     await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
-    toast(PENDING.includes(sel.value)?"הסטטוס עודכן":(tab==="orders"?"ההזמנה הועברה להזמנות מאושרות":"הסטטוס עודכן"));await loadOrders();
+    toast("הסטטוס עודכן");await loadOrders();
   }
-  if(e.target.id==="showDone")renderOrders();
 });
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.dataset.tab){
     tab=b.dataset.tab;
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===b));
-    $("#orders").hidden=tab==="menu";$("#menu").hidden=tab!=="menu";$("#doneLbl").hidden=tab!=="paid";
+    $("#orders").hidden=tab==="menu";$("#menu").hidden=tab!=="menu";
     if(tab==="menu")loadMenu();else loadOrders();
   }
   else if(b.id==="refresh"){tab==="menu"?loadMenu():loadOrders()}
