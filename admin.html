@@ -101,6 +101,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopbar.closed .shopst::before{background:#c8102e}
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
+#menu .card.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
+.msave{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.7rem 1rem;margin:.8rem 0;box-shadow:0 -4px 16px rgba(0,0,0,.18)}
+.msave #saveAll{margin-inline-start:auto;font-size:1.05rem;padding:.7rem 1.6rem}
+.msave #saveAll:disabled{opacity:.45;cursor:default}
+.mdirty{font-weight:700;color:var(--saffron)}
 .ltabs{display:flex;gap:.45rem;flex-wrap:wrap;margin:.2rem 0 1rem}
 .ltab{background:var(--card);border:2px solid var(--line);color:var(--ink);padding:.55rem 1.2rem}
 .ltab.on{background:var(--jade2);border-color:var(--jade2);color:var(--gold2)}
@@ -320,17 +325,25 @@ document.addEventListener("click",async e=>{
     loadOrders();
   }
   else if(b.id==="refresh"){tab==="menu"?loadMenu():tab==="lists"?loadLists():loadOrders()}
-  else if(b.id==="addDish"){b.insertAdjacentHTML("beforebegin",menuCard());b.previousElementSibling.querySelector("input").focus()}
-  else if(b.dataset.save!==undefined){
-    const c=b.closest(".card"),item={row:Number(c.dataset.row)};
-    c.querySelectorAll("[data-f]").forEach(i=>item[i.dataset.f]=i.value.trim());
-    if(!item.name||item.price===""){toast("חסר שם או מחיר");return}
-    b.disabled=true;
-    const res=await post({action:item.row?"saveMenuRow":"addMenuRow",item});
-    if(res!=="ok"){b.disabled=false;toast(postErr(res));return}
-    toast("נשמר");await loadMenu();
+  else if(b.id==="addDish"){b.closest(".msave").insertAdjacentHTML("beforebegin",menuCard());const c=b.closest(".msave").previousElementSibling;c.classList.add("dirty");markDirty();c.querySelector("input").focus()}
+  else if(b.id==="saveAll"){
+    // שומרים את כל המנות ששונו בלחיצה אחת
+    const cards=[...document.querySelectorAll("#menu .card.dirty")];if(!cards.length)return;
+    const items=cards.map(c=>{const it={row:Number(c.dataset.row)};c.querySelectorAll("[data-f]").forEach(i=>it[i.dataset.f]=i.value.trim());return it});
+    const bad=items.findIndex(it=>!it.name||it.price==="");
+    if(bad>=0){toast("חסר שם או מחיר במנה");cards[bad].scrollIntoView({block:"center"});cards[bad].querySelector("input").focus();return}
+    busy(1);let fail=0,err="";
+    try{for(const item of items){const res=await post({action:item.row?"saveMenuRow":"addMenuRow",item},true);if(res!=="ok"){fail++;err=res}}}
+    finally{busy(-1)}
+    if(fail){toast(postErr(err)+(items.length>1?` (${fail} מתוך ${items.length})`:""));return}
+    toast(items.length>1?`נשמרו ${items.length} מנות`:"נשמר");await loadMenu();
   }
 });
+// מסמנים מנות שעודכנו, כדי לשמור רק אותן
+function markDirty(){const n=document.querySelectorAll("#menu .card.dirty").length,s=$("#saveAll");if(!s)return;s.disabled=!n;$("#mdirty").textContent=n?(n===1?"מנה אחת עודכנה":n+" מנות עודכנו"):""}
+document.addEventListener("input",e=>{const c=e.target.closest("#menu .card");if(!c)return;c.classList.add("dirty");markDirty()});
+document.addEventListener("change",e=>{const c=e.target.closest("#menu .card");if(!c)return;c.classList.add("dirty");markDirty()});
+addEventListener("beforeunload",e=>{if(document.querySelector("#menu:not([hidden]) .card.dirty")){e.preventDefault();e.returnValue=""}});
 
 $("#eye").onclick=()=>{
   const k=$("#key"),show=k.type==="password";
