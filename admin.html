@@ -53,6 +53,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .card[data-s="בוטלה"]{border-inline-start-color:#b23a3a;opacity:.6}
 .oh{display:flex;justify-content:space-between;gap:1rem;font-weight:800}
 .oh span{font-weight:400;opacity:.75}
+.oh .ohr{display:flex;align-items:center;gap:.6rem;opacity:1}
+.delbtn{display:grid;place-items:center;width:2rem;height:2rem;padding:0;border-radius:8px;border:1px solid transparent;background:transparent;color:#e5484d;cursor:pointer}
+.delbtn:hover{background:rgba(229,72,77,.12);border-color:rgba(229,72,77,.4)}
 .who{margin:.3rem 0}
 .who a{color:var(--jade2);font-weight:600}
 @media (prefers-color-scheme:dark){.who a{color:var(--gold2)}}
@@ -172,7 +175,7 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
-function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון (ייתכן שזו שורה ישנה – הריצו את fixOldRows)","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","network":"שגיאת חיבור – השינוי לא נשמר"}[r]||("השמירה נכשלה: "+r)}
+function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון (ייתכן שזו שורה ישנה – הריצו את fixOldRows)","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר"}[r]||("השמירה נכשלה: "+r)}
 // סטטוסים ששונו כאן וטרם אושרו מהגיליון – מוצגים מיד ונשמרים עד שהגיליון מתעדכן
 const OVR={};
 function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
@@ -186,7 +189,7 @@ function renderOrders(){
   const empty=EMPTY[tab]||"אין הזמנות.";
   $("#orders").innerHTML=list.length?list.map(o=>`
     <div class="card" data-s="${esc(o.status)}">
-      <div class="oh"><span>#${esc(o.orderNo)}</span><span>${fmtTime(o.time)}</span></div>
+      <div class="oh"><span>#${esc(o.orderNo)}</span><span class="ohr"><span>${fmtTime(o.time)}</span><button class="delbtn" data-del="${esc(o.orderNo)}" title="מחיקת הזמנה" aria-label="מחיקת הזמנה ${esc(o.orderNo)}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></span></div>
       <div class="cust"><span class="cl">פרטי המזמין</span><b>${esc(o.name)}</b><a href="tel:${esc(o.phone)}" dir="ltr">${esc(o.phone)}</a><a class="wa" href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
       <span class="cl">המנות</span>
       <div class="items">${esc(o.items)}</div>
@@ -219,6 +222,14 @@ function menuCard(m){
   </div>`;
 }
 
+document.addEventListener("click",async e=>{
+  const del=e.target.closest("[data-del]");if(!del)return;
+  const no=del.dataset.del;
+  if(!confirm("למחוק את הזמנה #"+no+"?\nהמחיקה היא מהגיליון ולא ניתן לבטל אותה."))return;
+  const res=await post({action:"deleteOrder",orderNo:no});
+  if(res!=="ok"){toast(postErr(res));return}
+  ORDERS=ORDERS.filter(o=>o.orderNo!==no);delete OVR[no];renderOrders();toast("ההזמנה נמחקה");
+});
 document.addEventListener("change",async e=>{
   const sel=e.target.closest("select[data-no]");
   if(sel){
