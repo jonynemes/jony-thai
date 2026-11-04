@@ -44,6 +44,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .tabs .tab.on[data-tab="ready"]{background:#2e9d5b;border-color:#2e9d5b;color:#fff}
 .tabs .tab.on[data-tab="done"]{background:#8a8f8c;border-color:#8a8f8c;color:#fff}
 .tabs .tab.on[data-tab="cancel"]{background:#b23a3a;border-color:#b23a3a;color:#fff}
+.tabs .tab{--tc:var(--jade2);transition:background .15s,border-color .15s,color .15s}
+.tabs .tab[data-tab="new"]{--tc:#e8731a}.tabs .tab[data-tab="paid"]{--tc:#2f7de1}.tabs .tab[data-tab="prep"]{--tc:#8e5bd8}.tabs .tab[data-tab="ready"]{--tc:#2e9d5b}.tabs .tab[data-tab="done"]{--tc:#8a8f8c}.tabs .tab[data-tab="cancel"]{--tc:#b23a3a}
+@media (prefers-color-scheme:dark){.tabs .tab[data-tab="all"]{--tc:var(--gold2)}}
+@media (hover:hover){.tabs .tab:not(.on):hover{background:color-mix(in srgb,var(--tc) 22%,var(--card));border-color:var(--tc)}.tabs .tab.on:hover{filter:brightness(1.08)}.refresh:hover{background:#3d74c2}}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
 .tabs label input{width:auto}
 .card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:var(--r);padding:.9rem 1rem;margin:.8rem 0}
@@ -120,8 +124,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .ltab{border-color:color-mix(in srgb,var(--tc) 45%,var(--line))}
 .ltab.on{background:var(--tc);border-color:var(--tc);color:#fff}
 .ltab.on .lcnt{background:#fff;color:var(--tc)}
-.ltab{transition:background .15s,border-color .15s,color .15s,transform .15s}
-@media (hover:hover){.ltab:not(.on):hover{background:color-mix(in srgb,var(--tc) 22%,var(--card));border-color:var(--tc);transform:translateY(-1px)}.ltab.on:hover{filter:brightness(1.08)}}
+.ltab{transition:background .15s,border-color .15s,color .15s}
+@media (hover:hover){.ltab:not(.on):hover{background:color-mix(in srgb,var(--tc) 22%,var(--card));border-color:var(--tc)}.ltab.on:hover{filter:brightness(1.08)}}
 #lists .lcard,#lists .lform{border-inline-start:6px solid var(--lc)}
 #lists .lform.editing{border-color:var(--lc)}
 .lcnt{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .35rem;border-radius:999px;background:var(--saffron);color:#fff;font-size:.8rem;margin-inline-start:.25rem}
