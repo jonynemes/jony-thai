@@ -199,7 +199,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
       <button class="tab" data-tab="done">נמסרה <span data-cnt="done"></span></button>
       <button class="tab" data-tab="cancel">בוטלה <span data-cnt="cancel"></span></button>
-      <div class="tacts"><button class="closeday tab-only" id="closeDay" title="העברת הזמנות שנמסרו או בוטלו לארכיון"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>סגירת יום</button><button class="refresh" id="refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>רענון</button></div>
+      <div class="tacts"><button class="closeday tab-only" id="closeDay" title="העברת כל ההזמנות לארכיון והתחלה מחדש"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>סגירת יום</button><button class="refresh" id="refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>רענון</button></div>
     </div>
     <div id="orders"></div>
     <div id="menu" hidden></div>
@@ -352,11 +352,11 @@ document.addEventListener("click",async e=>{
 });
 // סגירת יום: הזמנות שנמסרו או בוטלו עוברות ללשונית ארכיון בגיליון
 $("#closeDay").onclick=async()=>{
-  const done=ORDERS.filter(o=>o.status==="נמסרה"||o.status==="בוטלה").length,open=ORDERS.length-done;
-  if(!done){toast("אין הזמנות שנמסרו או בוטלו להעברה");return}
-  if(!confirm(`סגירת יום:\n${done} הזמנות שנמסרו או בוטלו יעברו ללשונית ארכיון בגיליון.`+(open?`\n${open} הזמנות פתוחות יישארו כאן.`:"")+"\n\nלהמשיך?"))return;
+  const all=ORDERS.length,open=ORDERS.filter(o=>o.status!=="נמסרה"&&o.status!=="בוטלה").length;
+  if(!all){toast("אין הזמנות להעברה");return}
+  if(!confirm(`סגירת יום:\nכל ${all} ההזמנות יעברו ללשונית ארכיון בגיליון, ורשימת ההזמנות תתחיל מחדש ריקה.`+(open?`\n\nשימו לב: ${open} מהן עדיין פתוחות (לא נמסרו).`:"")+"\n\nלהמשיך?"))return;
   const res=await post({action:"closeDay"});
-  if(res==="nothing"){toast("אין הזמנות שנמסרו או בוטלו להעברה");return}
+  if(res==="nothing"){toast("אין הזמנות להעברה");return}
   if(!res.startsWith("ok")){toast(postErr(res));return}
   const [,n,name]=res.split(":");
   toast(`${n} הזמנות הועברו ל"${name}"`);await loadOrders();

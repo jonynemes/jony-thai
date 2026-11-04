@@ -145,17 +145,13 @@ function listOp_(d) {
 }
 
 // ===== סגירת יום =====
-// מעביר הזמנות שנמסרו או בוטלו ללשונית ארכיון לפי תאריך, ומשאיר בלשונית ההזמנות רק הזמנות פתוחות.
-const ARCHIVE_STATUSES = ["נמסרה", "בוטלה"];
+// מעביר את כל ההזמנות ללשונית ארכיון לפי תאריך, ולשונית ההזמנות מתחילה מחדש ריקה.
 function closeDay_() {
   const ss = SpreadsheetApp.getActive();
   const sh = sheet_(ORDERS);
   const data = sh.getDataRange().getValues();
-  const keep = [], move = [];
-  for (let i = 1; i < data.length; i++) {
-    if (!data[i][C.no]) continue;
-    (ARCHIVE_STATUSES.indexOf(String(data[i][C.status])) >= 0 ? move : keep).push(i + 1);
-  }
+  const move = [];
+  for (let i = 1; i < data.length; i++) if (data[i][C.no]) move.push(i + 1);
   if (!move.length) return text_("nothing");
 
   const name = "ארכיון " + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd.MM.yyyy");
@@ -184,8 +180,8 @@ function closeDay_() {
   summary[0] = "סיכום"; summary[C.name] = n + " הזמנות נמסרו"; summary[C.total] = sum;
   ar.getRange(ar.getLastRow() + 1, 1, 1, HEADERS.length).setValues([summary]).setFontWeight("bold").setBackground("#fff4d6");
 
-  // מוחקים מלשונית ההזמנות מלמטה למעלה, כדי שמספרי השורות לא יזוזו
-  move.sort(function (a, b) { return b - a; }).forEach(function (r) { sh.deleteRow(r); });
+  // מרוקנים את לשונית ההזמנות (העיצוב והכותרות נשארים)
+  sh.deleteRows(2, data.length - 1);
   return text_("ok:" + move.length + ":" + name);
 }
 
