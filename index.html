@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>התאילנדי של ג'וני</title>
+<meta name="description" content="אוכל תאילנדי ביתי, טרי ומדויק – הזמינו עכשיו לאיסוף">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jonynemes.github.io/jony-thai/">
+<meta property="og:title" content="התאילנדי של ג'וני">
+<meta property="og:description" content="אוכל תאילנדי ביתי, טרי ומדויק – הזמינו עכשיו לאיסוף">
+<meta property="og:image" content="https://jonynemes.github.io/jony-thai/images/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="he_IL">
+<meta name="twitter:card" content="summary_large_image">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Suez+One&family=Secular+One&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f1f5ef;--ink:#13302d;--jade:#0f3d3a;--jade2:#17524d;--gold:#c79a3b;--gold2:#e6c778;--saffron:#e8731a;--orchid:#a3345f;--card:#fffdf8;--line:#dfd6bd;--chili:#c8102e;--green:#17524d;--lime:#f0d58a;--r:12px;--head:#17524d}
@@ -254,7 +264,7 @@ function renderMenu(){
     <div class="dish" id="d-${i.id}">${i.img?`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`:""}<div class="top"><span>${i.n}</span><span class="lead"></span><span class="price"><span class="nis">₪</span>${i.p}</span></div>
     <small>${i.d}</small>
     <div class="qty"><button class="qb" data-m="${i.id}" aria-label="הפחת">−</button><span class="qn" id="q-${i.id}">0</span><button class="qb" data-p="${i.id}" aria-label="הוסף">+</button></div>
-    <button class="notebtn" type="button" data-nb="${i.id}">+ הוסף הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<p class="menufoot">כל המנות מוכנות טריות ומוכנות לאיסוף</p><div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
+    <button class="notebtn" type="button" data-nb="${i.id}">+ הוסף הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
   updateBar();applyClosed();
 }
 function updateBar(){const n=count(),b=$("#bar");if(!b)return;b.classList.toggle("empty",!n);$("#barTxt").textContent=n?n+" מנות · "+money(total()):""}
