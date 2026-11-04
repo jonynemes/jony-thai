@@ -140,7 +140,9 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
 .pay a,.pay button{display:block;text-align:center;text-decoration:none;color:#fff;padding:.85rem;border-radius:10px;font-weight:700}
 .bit{background:#3a63b8}.pbx{background:#2b8597}
 .paidbtn{display:block;margin:1.3rem auto 0;padding:.85rem 2.6rem;background:var(--saffron);color:#fff;box-shadow:0 4px 12px rgba(232,115,26,.22)}
-.payhint{margin:0 0 1rem;opacity:.85;line-height:1.6}
+.payhint{margin:0 0 1.1rem;padding:.8rem 1rem;line-height:1.6;font-weight:700;font-size:1.05rem;background:rgba(232,115,26,.13);border:1.5px solid rgba(232,115,26,.55);border-inline-start:5px solid #e8731a;border-radius:10px}
+.payhint::before{content:"⚠️";margin-inline-end:.4rem}
+.payhint b{color:#e8731a}
 .payphone{display:flex;flex-direction:column;align-items:flex-start;gap:.9rem;margin:0 0 1rem;padding:1.1rem 1.2rem 1.2rem;border-radius:var(--r);background:color-mix(in srgb,var(--gold) 12%,transparent);font-weight:600;font-size:clamp(1rem,4.3vw,1.32rem)}
 .payphone b{color:var(--price);font-size:1.08em;white-space:nowrap}
 .payphone span{width:100%;text-align:center}
