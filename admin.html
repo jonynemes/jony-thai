@@ -101,11 +101,61 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopbar.closed .shopst::before{background:#c8102e}
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
+.ltabs{display:flex;gap:.45rem;flex-wrap:wrap;margin:.2rem 0 1rem}
+.ltab{background:var(--card);border:2px solid var(--line);color:var(--ink);padding:.55rem 1.2rem}
+.ltab.on{background:var(--jade2);border-color:var(--jade2);color:var(--gold2)}
+.lcnt{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .35rem;border-radius:999px;background:var(--saffron);color:#fff;font-size:.8rem;margin-inline-start:.25rem}
+.lform{display:grid;grid-template-columns:2.2fr .8fr 1.2fr 1fr 1.6fr auto;gap:.6rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.8rem;margin-bottom:.9rem}
+.lform:has(.li-due){grid-template-columns:2fr .7fr 1.1fr 1fr .9fr 1.4fr auto}
+.lform.editing{border-color:var(--saffron);margin:.4rem 0}
+.lbtns{display:flex;gap:.4rem}
+@media (max-width:760px){.lform,.lform:has(.li-due){grid-template-columns:1fr 1fr}.li-text,.li-note,.lbtns{grid-column:1/-1}.lbtns button{flex:1}}
+.lcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.5rem 1rem .8rem;margin-bottom:.9rem}
+.lgrp{margin:.9rem 0 .2rem;font-size:.85rem;opacity:.65;font-weight:800}
+.li{display:flex;align-items:center;gap:.75rem;padding:.6rem .2rem;border-bottom:1px solid var(--line);border-inline-start:4px solid transparent;padding-inline-start:.5rem}
+.li:last-child{border-bottom:0}
+.li[data-pri="דחוף"]{border-inline-start-color:#e5484d}
+.li[data-pri="יכול לחכות"]{opacity:.8}
+.lchk{width:1.5rem;height:1.5rem;flex:none;margin:0;padding:0;accent-color:var(--ok);cursor:pointer}
+.lbody{flex:1;min-width:0}
+.ltxt{font-weight:700;font-size:1.05rem}
+.lqty{display:inline-block;font-size:.85rem;font-weight:700;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:0 .45rem;margin-inline-start:.3rem}
+.lurg{display:inline-block;font-size:.75rem;font-weight:800;color:#fff;background:#e5484d;border-radius:6px;padding:0 .4rem;margin-inline-start:.3rem}
+.lnote{font-size:.88rem;opacity:.75;margin-top:.1rem}
+.ldue{font-weight:700;margin-inline-end:.7rem}
+.ldue,.lnt{unicode-bidi:isolate;display:inline-block}
+.ldue.late{color:#e5484d}
+.li.done .ltxt{text-decoration:line-through;opacity:.5}
+.li.done .lnote{opacity:.4}
+.lic{display:grid;place-items:center;width:2rem;height:2rem;padding:0;border-radius:8px;background:transparent;color:var(--ink);opacity:.6;font-size:1.05rem;flex:none}
+.lic:hover{opacity:1;background:var(--bg)}
+.lic.del{color:#e5484d;opacity:.85}
+.lact{display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;margin:.6rem 0 .2rem}
+.ghost.danger{border-color:#e5484d;color:#e5484d}
+@media (prefers-color-scheme:dark){#lists .ghost{border-color:var(--gold2);color:var(--gold2)}#lists .ghost.danger{border-color:#ff6b6f;color:#ff6b6f}}
+.lscope{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem;font-weight:700}
+.chip{background:var(--card);border:2px solid var(--line);color:var(--ink);padding:.4rem 1rem}
+.chip.on{background:var(--jade2);border-color:var(--jade2);color:var(--gold2)}
+.lh{font-size:1.1rem;margin:.6rem 0 .4rem;font-weight:800}
+.lh small{font-weight:600;opacity:.6;font-size:.85rem;margin-inline-start:.4rem}
+.ltbl{width:100%;border-collapse:collapse}
+.ltbl td{padding:.55rem .3rem;border-bottom:1px solid var(--line);font-weight:600}
+.ltbl tr:last-child td{border-bottom:0}
+.ltbl .num{text-align:left;font-weight:800;font-size:1.15rem;color:var(--saffron);white-space:nowrap}
+.lwarn{color:#e5484d;font-weight:600;margin:.7rem 0 0}
+.linkb{background:none;padding:0;color:inherit;text-decoration:underline;border-radius:0}
+.lhint{opacity:.8;margin:0 0 .8rem}
+.rcp summary{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.5rem 0;cursor:pointer;font-size:1.05rem}
+.rcnt{font-size:.85rem;font-weight:700;opacity:.65}
+.rcnt.none{color:#e5484d;opacity:1}
+.rhead,.rrow{display:grid;grid-template-columns:2.2fr 1fr 1fr 2rem;gap:.5rem;align-items:center}
+.rhead{font-size:.8rem;font-weight:700;opacity:.6;margin:.4rem 0 .2rem}
+.rrow{margin-bottom:.45rem}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<header><h1>ניהול · התאילנדי של ג'וני</h1><nav class="views" id="views" hidden><button class="view on" data-view="orders">הזמנות</button><button class="view" data-view="menu">תפריט</button></nav><button class="ghost" id="logout" hidden>התנתקות</button></header>
+<header><h1>ניהול · התאילנדי של ג'וני</h1><nav class="views" id="views" hidden><button class="view on" data-view="orders">הזמנות</button><button class="view" data-view="menu">תפריט</button><button class="view" data-view="lists">רשימות</button></nav><button class="ghost" id="logout" hidden>התנתקות</button></header>
 <main>
   <section id="login">
     <h2>כניסה</h2>
@@ -137,6 +187,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     </div>
     <div id="orders"></div>
     <div id="menu" hidden></div>
+    <div id="lists" hidden></div>
   </section>
 </main>
 <div id="loader" hidden role="status" aria-label="טוען"><div class="lbox"><div class="spin"></div><span>טוען…</span></div></div>
@@ -159,8 +210,8 @@ async function get(action,silent){if(!silent)busy(1);try{
   const r=await fetch(SHEETS_URL+"?action="+action+"&key="+encodeURIComponent(KEY));
   return await r.json();
 }finally{if(!silent)busy(-1)}}
-async function post(body){
-  busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{busy(-1)}
+async function post(body,silent){
+  if(!silent)busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{if(!silent)busy(-1)}
 }
 function showLogin(msg){
   $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#views").hidden=true;$("#err").textContent=msg||"";
@@ -217,7 +268,7 @@ async function loadMenu(){
     const d=await get("menuall");
     if(d.error){showLogin("המפתח שגוי.");return}
     const rows=d.menu.map(m=>menuCard(m)).join("");
-    $("#menu").innerHTML=rows+'<button class="primary" id="addDish">+ הוספת מנה</button>';
+    $("#menu").innerHTML=rows+'<div class="msave"><button class="ghost" id="addDish">+ הוספת מנה</button><span class="mdirty" id="mdirty"></span><button class="primary" id="saveAll" disabled>שמירת כל השינויים</button></div>';
   }catch(e){toast("שגיאת חיבור")}
 }
 function menuCard(m){
@@ -231,7 +282,6 @@ function menuCard(m){
       <div class="f-desc"><label>תיאור</label><textarea data-f="desc" rows="3">${esc(m.desc)}</textarea></div>
       <div class="f-img"><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg" dir="ltr"></div>
     </div>
-    <button class="primary" data-save>שמירה</button>
   </div>`;
 }
 
@@ -256,21 +306,20 @@ document.addEventListener("change",async e=>{
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.dataset.view){
-    const menu=b.dataset.view==="menu";
-    document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v===b));
-    document.querySelectorAll(".tab").forEach(t=>t.hidden=menu);
-    if(menu){if(tab!=="menu")lastTab=tab;tab="menu"}else{tab=lastTab}
+    const v=b.dataset.view,other=v!=="orders";
+    document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x===b));
+    document.querySelectorAll(".tab").forEach(t=>t.hidden=other);
+    if(other){if(tab!=="menu"&&tab!=="lists")lastTab=tab;tab=v}else{tab=lastTab}
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
-    $("#orders").hidden=menu;$("#menu").hidden=!menu;
-    if(menu)loadMenu();else loadOrders();
+    $("#orders").hidden=other;$("#menu").hidden=v!=="menu";$("#lists").hidden=v!=="lists";
+    if(v==="menu")loadMenu();else if(v==="lists")loadLists();else loadOrders();
   }
   else if(b.dataset.tab){
     tab=b.dataset.tab;
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===b));
-    $("#orders").hidden=tab==="menu";$("#menu").hidden=tab!=="menu";
-    if(tab==="menu")loadMenu();else loadOrders();
+    loadOrders();
   }
-  else if(b.id==="refresh"){tab==="menu"?loadMenu():loadOrders()}
+  else if(b.id==="refresh"){tab==="menu"?loadMenu():tab==="lists"?loadLists():loadOrders()}
   else if(b.id==="addDish"){b.insertAdjacentHTML("beforebegin",menuCard());b.previousElementSibling.querySelector("input").focus()}
   else if(b.dataset.save!==undefined){
     const c=b.closest(".card"),item={row:Number(c.dataset.row)};
@@ -320,8 +369,159 @@ $("#shopClosed").onchange=async e=>{
   if(res!=="ok"){toast(postErr(res));renderShop();return}
   OPEN=!close;renderShop();toast(close?"ההזמנות נסגרו":"ההזמנות נפתחו");
 };
-function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&!document.hidden)loadOrders(false,true)},30000)}
+function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&tab!=="lists"&&!document.hidden)loadOrders(false,true)},30000)}
 if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
+</script>
+<script>
+// ===== רשימות: קניות / הכנות / משימות, כמה להכין, מתכונים =====
+const LT_NAMES={shop:"קניות",prep:"הכנות",todo:"משימות",count:"כמה להכין",recipes:"מתכונים"};
+const GROUP_LABEL={shop:"חנות / קטגוריה",prep:"מנה / קבוצה",todo:"קבוצה"};
+const PH={shop:"מה לקנות? (למשל: חלב קוקוס)",prep:"מה להכין? (למשל: לחתוך ירקות)",todo:"מה צריך לעשות?"};
+const PRI_ORDER={"דחוף":0,"רגיל":1,"יכול לחכות":2};
+const UNITS=["גרם","ק״ג","מ״ל","ליטר","יחידה","כף","כפית","פחית","חבילה","צרור"];
+const TRASH='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+const OPEN_ST={open:["חדשה","דווח תשלום","שולם","בהכנה"],paid:["שולם","בהכנה"]};
+let LT="shop",LDATA=null,RECIPES=[],MENU_NAMES=[],EDIT=null,CNT_SCOPE="open";
+const OPENR=new Set();
+
+async function loadLists(silent){
+  try{
+    const d=await get("lists",silent);
+    if(d&&d.error==="unauthorized"){showLogin("המפתח שגוי.");return}
+    if(!d||!d.lists){$("#lists").innerHTML=`<div class="empty">השרת עדיין לא תומך ברשימות. יש להדביק את Code.gs החדש ב-Apps Script ולפרסם גרסה חדשה.</div>`;return}
+    LDATA=d.lists;RECIPES=d.recipes||[];
+    if(!MENU_NAMES.length){try{const m=await get("menuall",true);MENU_NAMES=(m.menu||[]).map(x=>String(x.name||"")).filter(Boolean)}catch(e){}}
+    if(LT==="count")await loadOrders(false,true);
+    renderLists();
+  }catch(e){toast("שגיאת חיבור")}
+}
+function renderLists(){
+  if(!LDATA)return;
+  const tabs=Object.entries(LT_NAMES).map(([k,n])=>{const c=LDATA[k]?LDATA[k].filter(i=>!i.done).length:0;return `<button class="ltab${k===LT?" on":""}" data-lt="${k}">${n}${c?` <span class="lcnt">${c}</span>`:""}</button>`}).join("");
+  const body=LT==="count"?countView():LT==="recipes"?recipesView():listView(LT);
+  $("#lists").innerHTML=`<div class="ltabs">${tabs}</div>${body}<datalist id="units">${UNITS.map(u=>`<option value="${u}">`).join("")}</datalist>`;
+}
+const fmtDue=d=>{const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+"/"+m[2]:esc(d)};
+const fmtQ=n=>Math.round(n*100)/100;
+
+function itemForm(k,it){
+  it=it||{text:"",qty:"",note:"",group:"",pri:"רגיל",due:""};
+  const groups=[...new Set(LDATA[k].map(i=>i.group).filter(Boolean))];
+  return `<div class="lform${it.id?" editing":""}" data-id="${esc(it.id||"")}">
+    <input data-i="text" class="li-text" value="${esc(it.text)}" placeholder="${PH[k]}" aria-label="פריט">
+    <input data-i="qty" class="li-qty" value="${esc(it.qty)}" placeholder="כמות" aria-label="כמות">
+    <input data-i="group" class="li-grp" value="${esc(it.group)}" placeholder="${GROUP_LABEL[k]}" list="grp-${k}" aria-label="${GROUP_LABEL[k]}"><datalist id="grp-${k}">${groups.map(g=>`<option value="${esc(g)}">`).join("")}</datalist>
+    ${k==="todo"?`<input data-i="due" class="li-due" type="date" value="${esc(it.due)}" aria-label="תאריך יעד">`:""}
+    <select data-i="pri" class="li-pri" aria-label="דחיפות">${["דחוף","רגיל","יכול לחכות"].map(p=>`<option${p===it.pri?" selected":""}>${p}</option>`).join("")}</select>
+    <input data-i="note" class="li-note" value="${esc(it.note)}" placeholder="הערה" aria-label="הערה">
+    <div class="lbtns"><button class="primary" data-lsave>${it.id?"שמירה":"+ הוספה"}</button>${it.id?`<button class="ghost" data-lcancel>ביטול</button>`:""}</div>
+  </div>`;
+}
+function listView(k){
+  const items=[...LDATA[k]].sort((a,b)=>(PRI_ORDER[a.pri]??1)-(PRI_ORDER[b.pri]??1));
+  const open=items.filter(i=>!i.done),done=items.filter(i=>i.done);
+  const groups=new Map();open.forEach(i=>{const g=i.group||"";if(!groups.has(g))groups.set(g,[]);groups.get(g).push(i)});
+  const today=new Date().toISOString().slice(0,10);
+  const row=i=>EDIT===i.id?itemForm(k,i):`<div class="li${i.done?" done":""}" data-pri="${esc(i.pri)}">
+    <input type="checkbox" class="lchk" data-done="${esc(i.id)}"${i.done?" checked":""} aria-label="סימון ${esc(i.text)}">
+    <div class="lbody"><div class="ltxt">${esc(i.text)}${i.qty?` <span class="lqty">${esc(i.qty)}</span>`:""}${i.pri==="דחוף"&&!i.done?` <span class="lurg">דחוף</span>`:""}</div>
+    ${i.note||i.due?`<div class="lnote">${i.due?`<span class="ldue${!i.done&&i.due<today?" late":""}">עד ${fmtDue(i.due)}</span>`:""}${i.note?`<span class="lnt">${esc(i.note)}</span>`:""}</div>`:""}</div>
+    <button class="lic" data-ledit="${esc(i.id)}" title="עריכה" aria-label="עריכת ${esc(i.text)}">✎</button>
+    <button class="lic del" data-ldel="${esc(i.id)}" title="מחיקה" aria-label="מחיקת ${esc(i.text)}">${TRASH}</button></div>`;
+  const openHtml=[...groups].map(([g,arr])=>`${g||groups.size>1?`<h4 class="lgrp">${esc(g||"כללי")}</h4>`:""}${arr.map(row).join("")}`).join("");
+  return `${EDIT?"":itemForm(k)}
+    <div class="lcard">${openHtml||`<div class="empty">${done.length?"הכל בוצע!":"הרשימה ריקה. הוסיפו פריט למעלה."}</div>`}
+    ${done.length?`<h4 class="lgrp">בוצעו (${done.length})</h4>${done.map(row).join("")}`:""}</div>
+    ${done.length?`<div class="lact"><button class="ghost" data-lreset>איפוס הסימונים</button><button class="ghost danger" data-lclear>מחיקת הפריטים שבוצעו</button></div>`:""}`;
+}
+
+// סופרים מנות מתוך שורות ההזמנה ("2× קארי ירוק ועוף (לא חריף)")
+function parseItems(s){return String(s||"").split(/\n|;\s*/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(\d+)\s*[×x*]\s*(.+?)(?:\s*\(([^)]*)\))?$/);return m?{q:+m[1],name:m[2].trim(),note:(m[3]||"").trim()}:null}).filter(Boolean)}
+function countData(){
+  const orders=ORDERS.filter(o=>OPEN_ST[CNT_SCOPE].includes(o.status));
+  const dishes=new Map();
+  orders.forEach(o=>parseItems(o.items).forEach(it=>{const d=dishes.get(it.name)||{q:0,notes:[]};d.q+=it.q;if(it.note)d.notes.push(it.q+"× "+it.note);dishes.set(it.name,d)}));
+  const ings=new Map(),missing=[];
+  dishes.forEach((d,name)=>{const rs=RECIPES.filter(r=>r.dish===name);if(!rs.length){missing.push(name);return}
+    rs.forEach(r=>{const key=r.ing+"|"+(r.unit||"");const x=ings.get(key)||{ing:r.ing,unit:r.unit||"",q:0};x.q+=r.qty*d.q;ings.set(key,x)})});
+  return {orders,dishes:[...dishes].sort((a,b)=>b[1].q-a[1].q),ings:[...ings.values()].sort((a,b)=>String(a.ing).localeCompare(b.ing,"he")),missing};
+}
+function countView(){
+  const c=countData();
+  const scope=`<div class="lscope"><span>לפי הזמנות:</span><button class="chip${CNT_SCOPE==="open"?" on":""}" data-scope="open">כל הפתוחות</button><button class="chip${CNT_SCOPE==="paid"?" on":""}" data-scope="paid">רק שולמו ובהכנה</button></div>`;
+  if(!c.dishes.length)return scope+`<div class="lcard"><div class="empty">אין הזמנות פתוחות כרגע.</div></div>`;
+  return scope+`<div class="lcard"><h3 class="lh">כמה מנות להכין <small>${c.orders.length} הזמנות</small></h3>
+    <table class="ltbl"><tbody>${c.dishes.map(([n,d])=>`<tr><td>${esc(n)}${d.notes.length?`<div class="lnote">${esc(d.notes.join(" · "))}</div>`:""}</td><td class="num">${d.q}</td></tr>`).join("")}</tbody></table>
+    <div class="lact"><button class="ghost" data-addprep>הוספה לרשימת ההכנות</button></div></div>
+    <div class="lcard"><h3 class="lh">מצרכים שצריך</h3>
+    ${c.ings.length?`<table class="ltbl"><tbody>${c.ings.map(x=>`<tr><td>${esc(x.ing)}</td><td class="num">${fmtQ(x.q)} ${esc(x.unit)}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">עדיין אין מתכונים למנות האלה.</div>`}
+    ${c.missing.length?`<p class="lwarn">אין מתכון ל: ${c.missing.map(esc).join(", ")}. <button class="linkb" data-lt="recipes">להוספת מתכון</button></p>`:""}
+    ${c.ings.length?`<div class="lact"><button class="primary" data-addshop>הוספה לרשימת הקניות</button></div>`:""}</div>`;
+}
+function rRow(r){return `<div class="rrow"><input data-r="ing" value="${esc(r.ing)}" placeholder="מצרך (למשל: חזה עוף)" aria-label="מצרך"><input data-r="qty" type="number" step="any" min="0" value="${esc(r.qty)}" placeholder="כמות" aria-label="כמות למנה"><input data-r="unit" value="${esc(r.unit)}" placeholder="יחידה" list="units" aria-label="יחידה"><button class="lic del" data-rdel title="הסרה" aria-label="הסרת מצרך">${TRASH}</button></div>`}
+function recipesView(){
+  const dishes=[...new Set([...MENU_NAMES,...RECIPES.map(r=>String(r.dish))])];
+  if(!dishes.length)return `<div class="lcard"><div class="empty">אין מנות בתפריט.</div></div>`;
+  return `<p class="lhint">כתבו מה נכנס במנה <b>אחת</b>. לפי זה יחושבו המצרכים לקנייה בלשונית "כמה להכין".</p>`+dishes.map(d=>{
+    const rs=RECIPES.filter(r=>String(r.dish)===d);
+    return `<details class="lcard rcp" data-dish="${esc(d)}"${OPENR.has(d)?" open":""}><summary><b>${esc(d)}</b><span class="rcnt${rs.length?"":" none"}">${rs.length?rs.length+" מצרכים":"אין מתכון"}</span></summary>
+      <div class="rhead"><span>מצרך</span><span>כמות למנה</span><span>יחידה</span><span></span></div>
+      <div class="rrows">${(rs.length?rs:[{ing:"",qty:"",unit:""}]).map(rRow).join("")}</div>
+      <div class="lact"><button class="ghost" data-raddrow>+ מצרך</button><button class="primary" data-rsave>שמירת המתכון</button></div></details>`}).join("");
+}
+
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("#lists button");if(!b)return;
+  const d=b.dataset;
+  if(d.lt){LT=d.lt;EDIT=null;if(LT==="count")await loadOrders(false,true);renderLists();return}
+  if(d.scope){CNT_SCOPE=d.scope;renderLists();return}
+  if(d.lsave!==undefined){
+    const f=b.closest(".lform"),it={id:f.dataset.id||""};
+    f.querySelectorAll("[data-i]").forEach(i=>it[i.dataset.i]=i.value.trim());
+    if(!it.text){toast("חסר שם פריט");f.querySelector('[data-i="text"]').focus();return}
+    if(it.id){const old=LDATA[LT].find(x=>x.id===it.id);it.done=old?old.done:false}
+    const res=await post({action:"listSave",list:LT,item:it});
+    if(res!=="ok"){toast(postErr(res));return}
+    const wasNew=!it.id;EDIT=null;toast(wasNew?"נוסף":"נשמר");await loadLists();
+    if(wasNew){const t=document.querySelector('#lists .lform [data-i="text"]');if(t)t.focus()}
+    return}
+  if(d.lcancel!==undefined){EDIT=null;renderLists();return}
+  if(d.ledit){EDIT=d.ledit;renderLists();const t=document.querySelector('#lists .lform [data-i="text"]');if(t)t.focus();return}
+  if(d.ldel){
+    const it=LDATA[LT].find(x=>x.id===d.ldel);if(!confirm(`למחוק את "${it?it.text:""}"?`))return;
+    LDATA[LT]=LDATA[LT].filter(x=>x.id!==d.ldel);renderLists();
+    const res=await post({action:"listDelete",list:LT,id:d.ldel},true);
+    if(res!=="ok"){toast(postErr(res));loadLists(true)}
+    return}
+  if(d.lclear!==undefined){if(!confirm("למחוק את כל הפריטים שסומנו כבוצעו?"))return;const res=await post({action:"listClearDone",list:LT});if(res!=="ok")toast(postErr(res));await loadLists();return}
+  if(d.lreset!==undefined){const res=await post({action:"listReset",list:LT});if(res!=="ok")toast(postErr(res));await loadLists();return}
+  if(d.addprep!==undefined||d.addshop!==undefined){
+    const c=countData(),shop=d.addshop!==undefined;
+    const items=shop?c.ings.map(x=>({text:x.ing,qty:(fmtQ(x.q)+" "+x.unit).trim(),group:"לפי הזמנות",pri:"רגיל"}))
+                    :c.dishes.map(([n,x])=>({text:n,qty:String(x.q),group:"לפי הזמנות",note:x.notes.join(" · "),pri:"רגיל"}));
+    if(!items.length)return;
+    const res=await post({action:"listAdd",list:shop?"shop":"prep",items});
+    if(res!=="ok"){toast(postErr(res));return}
+    toast(shop?"נוסף לרשימת הקניות":"נוסף לרשימת ההכנות");await loadLists(true);return}
+  if(d.raddrow!==undefined){const c=b.closest(".rcp");c.querySelector(".rrows").insertAdjacentHTML("beforeend",rRow({ing:"",qty:"",unit:""}));c.querySelector(".rrow:last-child input").focus();return}
+  if(d.rdel!==undefined){b.closest(".rrow").remove();return}
+  if(d.rsave!==undefined){
+    const c=b.closest(".rcp"),dish=c.dataset.dish;
+    const rows=[...c.querySelectorAll(".rrow")].map(r=>({ing:r.querySelector('[data-r="ing"]').value.trim(),qty:r.querySelector('[data-r="qty"]').value,unit:r.querySelector('[data-r="unit"]').value.trim()})).filter(r=>r.ing);
+    if(rows.some(r=>!(Number(r.qty)>0))){toast("חסרה כמות לאחד המצרכים");return}
+    const res=await post({action:"recipeSave",dish,rows});
+    if(res!=="ok"){toast(postErr(res));return}
+    OPENR.add(dish);toast("המתכון נשמר");await loadLists();return}
+});
+document.addEventListener("change",async e=>{
+  const c=e.target.closest("#lists [data-done]");if(!c)return;
+  const it=LDATA[LT].find(x=>x.id===c.dataset.done);if(!it)return;
+  it.done=c.checked;renderLists();
+  const res=await post({action:"listDone",list:LT,id:it.id,done:it.done},true);
+  if(res!=="ok"){it.done=!it.done;renderLists();toast(postErr(res))}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest("#lists .lform input")){e.preventDefault();e.target.closest(".lform").querySelector("[data-lsave]").click()}});
+document.addEventListener("toggle",e=>{const t=e.target;if(t.classList&&t.classList.contains("rcp")){t.open?OPENR.add(t.dataset.dish):OPENR.delete(t.dataset.dish)}},true);
 </script>
 </body>
 </html>

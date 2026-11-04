@@ -28,6 +28,122 @@ function menuRows_() {
     return { row: i + 2, cat: r[0], name: r[1], desc: r[2], price: r[3], active: r[4], img: r[5] };
   });
 }
+// ===== רשימות (קניות / הכנות / משימות) ומתכונים =====
+// כל רשימה בלשונית משלה בגיליון. הלשוניות נוצרות אוטומטית בפעם הראשונה.
+const LISTS = { shop: "קניות", prep: "הכנות", todo: "משימות" };
+const LIST_HEADERS = ["מזהה", "פריט", "כמות", "הערה", "קבוצה", "דחיפות", "בוצע", "תאריך יעד"];
+const RECIPES = "מתכונים";
+const RECIPE_HEADERS = ["מנה", "מצרך", "כמות למנה", "יחידה"];
+
+function ensureSheet_(name, headers, checkboxCol) {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName(name);
+  if (sh) return sh;
+  sh = ss.insertSheet(name);
+  sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
+  sh.setFrozenRows(1);
+  sh.setRightToLeft(true);
+  if (checkboxCol) sh.getRange(2, checkboxCol, sh.getMaxRows() - 1).insertCheckboxes();
+  return sh;
+}
+function listSheet_(key) {
+  if (!LISTS[key]) return null;
+  return ensureSheet_(LISTS[key], LIST_HEADERS, 7);
+}
+function listItems_(key) {
+  const sh = listSheet_(key);
+  return sh.getDataRange().getValues().slice(1).filter(function (r) { return r[0] && r[1]; }).map(function (r) {
+    const due = r[7] instanceof Date ? Utilities.formatDate(r[7], Session.getScriptTimeZone(), "yyyy-MM-dd") : String(r[7] || "");
+    return { id: String(r[0]), text: r[1], qty: String(r[2]), note: r[3], group: r[4], pri: r[5] || "רגיל", done: r[6] === true, due: due };
+  });
+}
+function listRowOf_(sh, id) {
+  const ids = sh.getRange(1, 1, sh.getLastRow(), 1).getValues();
+  for (let i = 1; i < ids.length; i++) if (String(ids[i][0]) === String(id)) return i + 1;
+  return 0;
+}
+function listRowValues_(id, it) {
+  const pri = ["דחוף", "רגיל", "יכול לחכות"].indexOf(it.pri) >= 0 ? it.pri : "רגיל";
+  return [id, clean_(it.text), clean_(it.qty), clean_(it.note), clean_(it.group), pri, it.done === true, clean_(it.due)];
+}
+// כותב שורה אחרי השורה האחרונה עם תוכן (appendRow היה מדלג על שורות תיבות הסימון הריקות)
+function listAppend_(sh, rows) {
+  const ids = sh.getRange(1, 1, sh.getMaxRows(), 1).getValues();
+  let last = 1;
+  for (let i = ids.length - 1; i > 0; i--) if (ids[i][0] !== "") { last = i + 1; break; }
+  if (last + rows.length > sh.getMaxRows()) {
+    sh.insertRowsAfter(sh.getMaxRows(), rows.length + 50);
+    sh.getRange(2, 7, sh.getMaxRows() - 1).insertCheckboxes();
+  }
+  sh.getRange(last + 1, 1, rows.length, LIST_HEADERS.length).setValues(rows);
+}
+function recipeSheet_() { return ensureSheet_(RECIPES, RECIPE_HEADERS); }
+function recipeRows_() {
+  return recipeSheet_().getDataRange().getValues().slice(1).filter(function (r) { return r[0] && r[1]; }).map(function (r) {
+    return { dish: r[0], ing: r[1], qty: Number(r[2]) || 0, unit: r[3] };
+  });
+}
+
+function listOp_(d) {
+  if (d.action === "recipeSave") {
+    const sh = recipeSheet_();
+    const dish = clean_(d.dish);
+    if (!dish) return text_("bad item");
+    const v = sh.getDataRange().getValues();
+    for (let i = v.length - 1; i >= 1; i--) if (String(v[i][0]) === dish) sh.deleteRow(i + 1);
+    const rows = (d.rows || []).filter(function (r) { return r.ing; }).map(function (r) {
+      return [dish, clean_(r.ing), Number(r.qty) || 0, clean_(r.unit)];
+    });
+    if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, 4).setValues(rows);
+    return text_("ok");
+  }
+
+  const sh = listSheet_(d.list);
+  if (!sh) return text_("bad list");
+
+  if (d.action === "listSave") {
+    const it = d.item || {};
+    if (!it.text) return text_("bad item");
+    if (it.id) {
+      const r = listRowOf_(sh, it.id);
+      if (!r) return text_("not found");
+      sh.getRange(r, 1, 1, LIST_HEADERS.length).setValues([listRowValues_(it.id, it)]);
+    } else {
+      listAppend_(sh, [listRowValues_(Utilities.getUuid().slice(0, 8), it)]);
+    }
+    return text_("ok");
+  }
+  if (d.action === "listAdd") {
+    const rows = (d.items || []).filter(function (it) { return it.text; }).map(function (it) {
+      return listRowValues_(Utilities.getUuid().slice(0, 8), it);
+    });
+    if (rows.length) listAppend_(sh, rows);
+    return text_("ok");
+  }
+  if (d.action === "listDone") {
+    const r = listRowOf_(sh, d.id);
+    if (!r) return text_("not found");
+    sh.getRange(r, 7).setValue(d.done === true);
+    return text_("ok");
+  }
+  if (d.action === "listDelete") {
+    const r = listRowOf_(sh, d.id);
+    if (!r) return text_("not found");
+    sh.deleteRow(r);
+    return text_("ok");
+  }
+  if (d.action === "listClearDone" || d.action === "listReset") {
+    const v = sh.getDataRange().getValues();
+    for (let i = v.length - 1; i >= 1; i--) {
+      if (!v[i][0]) continue;
+      if (d.action === "listClearDone" && v[i][6] === true) sh.deleteRow(i + 1);
+      if (d.action === "listReset" && v[i][6] === true) sh.getRange(i + 1, 7).setValue(false);
+    }
+    return text_("ok");
+  }
+  return text_("unknown action");
+}
+
 // האם האתר מקבל הזמנות (נשמר בהגדרות הסקריפט; ברירת מחדל: פתוח)
 function isOpen_() { return PropertiesService.getScriptProperties().getProperty("open") !== "no"; }
 
@@ -57,6 +173,13 @@ function doGet(e) {
       };
     }).filter(function (o) { return o.orderNo; }).reverse();
     return json_({ orders: orders, statuses: STATUSES, open: isOpen_() });
+  }
+
+  if (p.action === "lists") {
+    if (!isAdmin_(p.key)) return json_({ error: "unauthorized" });
+    const lists = {};
+    Object.keys(LISTS).forEach(function (k) { lists[k] = listItems_(k); });
+    return json_({ lists: lists, recipes: recipeRows_() });
   }
 
   if (p.action === "menuall") {
@@ -105,6 +228,8 @@ function customerOrder_(d) {
 
 // פעולות ניהול (דורשות מפתח)
 function adminOp_(d) {
+  if (/^list|^recipe/.test(d.action)) return listOp_(d);
+
   if (d.action === "setStatus") {
     if (STATUSES.indexOf(d.status) < 0) return text_("bad status");
     const sh = sheet_(ORDERS);
