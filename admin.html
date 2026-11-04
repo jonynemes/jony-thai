@@ -175,7 +175,7 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
-function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון (ייתכן שזו שורה ישנה – הריצו את fixOldRows)","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר"}[r]||("השמירה נכשלה: "+r)}
+function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר"}[r]||("השמירה נכשלה: "+r)}
 // סטטוסים ששונו כאן וטרם אושרו מהגיליון – מוצגים מיד ונשמרים עד שהגיליון מתעדכן
 const OVR={};
 function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
