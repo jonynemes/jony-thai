@@ -110,6 +110,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .ltabs{display:flex;gap:.45rem;flex-wrap:wrap;margin:.2rem 0 1rem}
 .ltab{background:var(--card);border:2px solid var(--line);color:var(--ink);padding:.55rem 1.2rem}
 .ltab.on{background:var(--jade2);border-color:var(--jade2);color:var(--gold2)}
+#lists{--lc:var(--jade2)}#lists[data-lt="shop"]{--lc:#2f7de1}#lists[data-lt="prep"]{--lc:#8e5bd8}#lists[data-lt="todo"]{--lc:#e8731a}#lists[data-lt="count"]{--lc:#2e9d5b}#lists[data-lt="recipes"]{--lc:#b0782a}
+.ltab[data-lt="shop"]{--tc:#2f7de1}.ltab[data-lt="prep"]{--tc:#8e5bd8}.ltab[data-lt="todo"]{--tc:#e8731a}.ltab[data-lt="count"]{--tc:#2e9d5b}.ltab[data-lt="recipes"]{--tc:#b0782a}
+.ltab{border-color:color-mix(in srgb,var(--tc) 45%,var(--line))}
+.ltab.on{background:var(--tc);border-color:var(--tc);color:#fff}
+.ltab.on .lcnt{background:#fff;color:var(--tc)}
+#lists .lcard,#lists .lform{border-inline-start:6px solid var(--lc)}
+#lists .lform.editing{border-color:var(--lc)}
 .lcnt{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .35rem;border-radius:999px;background:var(--saffron);color:#fff;font-size:.8rem;margin-inline-start:.25rem}
 .lform{display:grid;grid-template-columns:2.2fr .8fr 1.2fr 1fr 1.6fr auto;gap:.6rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.8rem;margin-bottom:.9rem}
 .lform:has(.li-due){grid-template-columns:2fr .7fr 1.1fr 1fr .9fr 1.4fr auto}
@@ -413,6 +420,7 @@ function renderLists(){
   if(!LDATA)return;
   const tabs=Object.entries(LT_NAMES).map(([k,n])=>{const c=LDATA[k]?LDATA[k].filter(i=>!i.done).length:0;return `<button class="ltab${k===LT?" on":""}" data-lt="${k}">${n}${c?` <span class="lcnt">${c}</span>`:""}</button>`}).join("");
   const body=LT==="count"?countView():LT==="recipes"?recipesView():listView(LT);
+  $("#lists").dataset.lt=LT;
   $("#lists").innerHTML=`<div class="ltabs">${tabs}</div>${body}<datalist id="units">${UNITS.map(u=>`<option value="${u}">`).join("")}</datalist>`;
 }
 const fmtDue=d=>{const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+"/"+m[2]:esc(d)};
