@@ -97,6 +97,8 @@ input,textarea{font:inherit;width:100%;padding:.65rem .8rem;border:1px solid var
 button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
 /* כפתור ההזמנה – בתוך מסגרת התפריט, צף בתחתית המסך בזמן גלילה */
 .orderbar{position:relative;display:flex;flex-direction:column;align-items:center;gap:.45rem;width:max-content;max-width:100%;margin:1.4rem auto 0;padding:.4rem 0 0}
+body.closed button:disabled,body.closed input:disabled,body.closed textarea:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.7);transform:none!important;box-shadow:none!important}
+body.closed .orderbar::before{content:"כרגע לא ניתן לבצע הזמנות";color:#e5484d;font-weight:700;font-size:1.05rem}
 #barTxt{font-weight:700;color:var(--price);font-size:1.4rem}
 #barTxt:empty{display:none}
 .orderbar button{font-size:1.2rem;padding:.85rem 3.4rem;box-shadow:0 4px 12px rgba(232,115,26,.22)}
@@ -230,6 +232,7 @@ let MENU = [
 let ALL = MENU.flatMap(c=>c.items);
 const cart = {}; // id -> {q, note}
 const NOTES = {}; // id -> note (נשמר גם לפני שהמנה נבחרה)
+let CLOSED=false; // ההזמנות סגורות (נקבע מהשרת)
 let orderNo = "";
 const $ = s=>document.querySelector(s);
 const money = n=>"₪"+n;
@@ -252,7 +255,7 @@ function renderMenu(){
     <small>${i.d}</small>
     <div class="qty"><button class="qb" data-m="${i.id}" aria-label="הפחת">−</button><span class="qn" id="q-${i.id}">0</span><button class="qb" data-p="${i.id}" aria-label="הוסף">+</button></div>
     <button class="notebtn" type="button" data-nb="${i.id}">+ הוסף הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<p class="menufoot">כל המנות מוכנות טריות ומוכנות לאיסוף</p><div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
-  updateBar();
+  updateBar();applyClosed();
 }
 function updateBar(){const n=count(),b=$("#bar");if(!b)return;b.classList.toggle("empty",!n);$("#barTxt").textContent=n?n+" מנות · "+money(total()):""}
 function change(id,delta){
@@ -315,6 +318,7 @@ async function copy(t){try{await navigator.clipboard.writeText(t)}catch(e){const
 
 document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;
+  if(CLOSED&&t.id!=="okBtn")return closedMsg();
   if(t.dataset.p)change(t.dataset.p,1);
   else if(t.dataset.m)change(t.dataset.m,-1);
   else if(t.dataset.nb){const d=$("#d-"+t.dataset.nb),on=d.classList.toggle("noteon");t.textContent=on?"− הסתרת הערה":(NOTES[t.dataset.nb]?"✎ עריכת הערה":"+ הערה למנה");if(on)d.querySelector(".note").focus()}
@@ -335,6 +339,8 @@ async function loadMenu(){
   if(!CONFIG.SHEETS_URL)return renderMenu();
   $("#menu").innerHTML=`<div class="menucard menuload"><div class="spin"></div><p>טוען את התפריט…</p></div>`;
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);
+  // בודקים במקביל אם ההזמנות פתוחות (נסגרות רק בתשובה מפורשת open:false)
+  fetch(CONFIG.SHEETS_URL+"?action=open",{signal:ctl.signal}).then(r=>r.json()).then(d=>{if(d&&d.open===false){CLOSED=true;applyClosed();closedMsg()}}).catch(()=>{});
   try{
     const r=await fetch(CONFIG.SHEETS_URL+"?action=menu",{signal:ctl.signal});
     const rows=await r.json(); // [{cat,name,desc,price,active}]
@@ -347,6 +353,13 @@ async function loadMenu(){
     if(map.size){MENU=[...map].map(([cat,items])=>({cat,items}));ALL=MENU.flatMap(c=>c.items)}
   }catch(e){/* נשארים עם תפריט הגיבוי */}
   finally{clearTimeout(timer);renderMenu()}
+}
+// מצב "הזמנות סגורות": הודעה בכניסה, וכל פקדי ההזמנה מושבתים
+
+function closedMsg(){done("ההזמנות סגורות","כרגע לא ניתן לבצע הזמנות, תודה וסליחה")}
+function applyClosed(){
+  document.body.classList.toggle("closed",CLOSED);
+  document.querySelectorAll("#menu button,#menu input,#v-order button,#v-order input,#v-order textarea").forEach(e=>e.disabled=CLOSED);
 }
 loadMenu();
 // מיקום אותיות הכותרת על קשת

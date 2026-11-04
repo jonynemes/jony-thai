@@ -28,6 +28,9 @@ function menuRows_() {
     return { row: i + 2, cat: r[0], name: r[1], desc: r[2], price: r[3], active: r[4], img: r[5] };
   });
 }
+// האם האתר מקבל הזמנות (נשמר בהגדרות הסקריפט; ברירת מחדל: פתוח)
+function isOpen_() { return PropertiesService.getScriptProperties().getProperty("open") !== "no"; }
+
 // מחזיר את מספר השורה בגיליון של הזמנה, או 0
 function findOrderRow_(data, orderNo) {
   for (let i = 1; i < data.length; i++) {
@@ -40,6 +43,8 @@ function findOrderRow_(data, orderNo) {
 function doGet(e) {
   const p = e.parameter || {};
 
+  if (p.action === "open") return json_({ open: isOpen_() });
+
   if (p.action === "orders") {
     if (!isAdmin_(p.key)) return json_({ error: "unauthorized" });
     const v = sheet_(ORDERS).getDataRange().getValues().slice(1);
@@ -51,7 +56,7 @@ function doGet(e) {
         time: t instanceof Date ? t.toISOString() : String(t), orderNo: String(r[C.no])
       };
     }).filter(function (o) { return o.orderNo; }).reverse();
-    return json_({ orders: orders, statuses: STATUSES });
+    return json_({ orders: orders, statuses: STATUSES, open: isOpen_() });
   }
 
   if (p.action === "menuall") {
@@ -90,6 +95,7 @@ function customerOrder_(d) {
     if (d.status === "דווח תשלום" && data[r - 1][C.status] === "חדשה") sh.getRange(r, C.status + 1).setValue("דווח תשלום");
     return text_("updated");
   }
+  if (!isOpen_()) return text_("closed"); // הזמנות סגורות – לא נרשמות הזמנות חדשות
   const now = new Date();
   // אותו רגע בשתי העמודות: A מוצגת כתאריך, B כשעה
   sh.appendRow([now, now, orderNo, clean_(d.name), "'" + clean_(d.phone), clean_(String(d.items || "").replace(/;\s*/g, "\n")), clean_(d.note),
@@ -105,6 +111,11 @@ function adminOp_(d) {
     const r = findOrderRow_(sh.getDataRange().getValues(), d.orderNo);
     if (!r) return text_("not found");
     sh.getRange(r, C.status + 1).setValue(d.status);
+    return text_("ok");
+  }
+
+  if (d.action === "setOpen") {
+    PropertiesService.getScriptProperties().setProperty("open", d.open ? "yes" : "no");
     return text_("ok");
   }
 

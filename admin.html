@@ -94,6 +94,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes sp{to{transform:rotate(360deg)}}
 .spin.sm{display:inline-block;width:1rem;height:1rem;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:#fff;vertical-align:-.15em;margin-inline-end:.35rem}
 #enter:disabled{opacity:.85;cursor:wait}
+.shopbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--card);border:1px solid var(--line);border-inline-start:6px solid #2e9d5b;border-radius:12px;padding:.7rem 1rem;margin:.3rem 0 .8rem}
+.shopbar.closed{border-inline-start-color:#c8102e;background:color-mix(in srgb,#c8102e 9%,var(--card))}
+.shopst{font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
+.shopst::before{content:"";width:.7rem;height:.7rem;border-radius:50%;background:#2e9d5b}
+.shopbar.closed .shopst::before{background:#c8102e}
+.sw{position:relative;width:3.4rem;height:1.9rem;padding:0;border-radius:999px;background:#2e9d5b;flex:none;transition:background .2s}
+.sw span{position:absolute;top:.2rem;inset-inline-start:.2rem;width:1.5rem;height:1.5rem;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:inset-inline-start .2s}
+.sw[aria-checked="false"]{background:#9aa09d}
+.sw[aria-checked="false"] span{inset-inline-start:1.7rem}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -114,6 +123,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </section>
 
   <section id="app" hidden>
+    <div class="shopbar" id="shopbar" hidden>
+      <span class="shopst" id="shopTxt"></span>
+      <button class="sw" id="shopSw" role="switch" aria-checked="true" aria-label="קבלת הזמנות באתר"><span></span></button>
+    </div>
     <div class="tabs">
       <button class="tab" data-tab="all">הכל <span data-cnt="all"></span></button>
       <button class="tab on" data-tab="new">חדשות <span data-cnt="new"></span></button>
@@ -162,6 +175,7 @@ async function loadOrders(initial,silent){
     const d=await get("orders",silent);
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
+    if("open" in d){OPEN=d.open;renderShop()}
     STATUSES=[...d.statuses];if(!STATUSES.includes("בוטלה"))STATUSES.push("בוטלה");ORDERS=d.orders.map(fixLegacy);applyOverrides();
     const nos=new Set(ORDERS.map(o=>o.orderNo));
     if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
@@ -291,6 +305,21 @@ async function login(){
   btn.disabled=false;btn.textContent="כניסה";
   if(ok){try{localStorage.setItem("jt_admin_key",KEY)}catch(e){}start()}
 }
+// פתיחה/סגירה של קבלת הזמנות באתר
+let OPEN=null;
+function renderShop(){
+  $("#shopbar").hidden=OPEN===null;
+  $("#shopbar").classList.toggle("closed",!OPEN);
+  $("#shopTxt").textContent=OPEN?"האתר מקבל הזמנות":"ההזמנות סגורות – הלקוחות לא יכולים להזמין";
+  $("#shopSw").setAttribute("aria-checked",String(!!OPEN));
+}
+$("#shopSw").onclick=async()=>{
+  const next=!OPEN;
+  if(!next&&!confirm("לסגור את קבלת ההזמנות באתר?"))return;
+  const res=await post({action:"setOpen",open:next});
+  if(res!=="ok"){toast(postErr(res));return}
+  OPEN=next;renderShop();toast(next?"ההזמנות נפתחו":"ההזמנות נסגרו");
+};
 function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&!document.hidden)loadOrders(false,true)},30000)}
 if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
 </script>
