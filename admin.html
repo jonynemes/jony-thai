@@ -103,13 +103,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes sp{to{transform:rotate(360deg)}}
 .spin.sm{display:inline-block;width:1rem;height:1rem;border-width:2px;border-color:rgba(255,255,255,.4);border-top-color:#fff;vertical-align:-.15em;margin-inline-end:.35rem}
 #enter:disabled{opacity:.85;cursor:wait}
-.shopbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--card);border:1px solid var(--line);border-inline-start:6px solid #2e9d5b;border-radius:var(--r);padding:.7rem 1rem;margin:.3rem 0 .8rem}
+.shopbar{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:1.2rem;background:var(--card);border:1px solid var(--line);border-inline-start:6px solid #2e9d5b;border-radius:var(--r);padding:.6rem .7rem;margin:.3rem 0 .8rem}
 .shopbar.closed{border-inline-start-color:#c8102e;background:color-mix(in srgb,#c8102e 9%,var(--card))}
 .shopst{font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
 .shopst::before{content:"";width:.7rem;height:.7rem;border-radius:50%;background:#2e9d5b}
 .shopbar.closed .shopst::before{background:#c8102e}
-.shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
-.shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
+.shopchk{display:flex;align-items:center;gap:.7rem;font-weight:800;font-size:1.2rem;cursor:pointer;color:#c8102e;background:color-mix(in srgb,#c8102e 12%,var(--card));border:2px solid #c8102e;border-radius:var(--r);padding:.5rem 1rem;transition:background .15s}
+@media (hover:hover){.shopchk:hover{background:color-mix(in srgb,#c8102e 22%,var(--card))}}
+.shopbar.closed .shopchk{background:#c8102e;color:#fff}
+.shopchk input{width:1.6rem;height:1.6rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
+.shopbar.closed .shopchk input{accent-color:#fff}
+.shopchk input{outline:3px solid var(--saffron);outline-offset:2px;border-radius:3px}.shopchk input:checked{outline:none}
 
 #menu .card.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
 .msave{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.7rem 1rem;margin:.8rem 0;box-shadow:0 -4px 16px rgba(0,0,0,.18)}
