@@ -82,6 +82,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .f-name{grid-column:span 3}.f-price,.f-cat,.f-act{grid-column:span 1}.f-desc{grid-column:1/-1}.f-img{grid-column:span 3}
 .grid2 input,.grid2 select,.grid2 textarea{padding:.7rem .85rem;font-size:1.02rem}
 .grid2 textarea{resize:vertical;line-height:1.5}
+.grid2 input[type=checkbox]{width:1.35rem;height:1.35rem;padding:0;accent-color:var(--ok);cursor:pointer}
+.f-act .active-toggle{display:flex;align-items:center;gap:.45rem;margin:0}
 @media (max-width:700px){.grid2{grid-template-columns:1fr 1fr}.f-name,.f-desc,.f-img{grid-column:1/-1}.f-price,.f-cat,.f-act{grid-column:span 1}}
 .grid2 label{font-size:.9rem;font-weight:600;display:block;margin-bottom:.25rem;opacity:.85}
 #login{max-width:380px;margin:3rem auto;text-align:center}
@@ -303,7 +305,7 @@ function menuCard(m){
       <div class="f-name"><label>שם המנה</label><input data-f="name" value="${esc(m.name)}"></div>
       <div class="f-price"><label>מחיר בש״ח</label><input data-f="price" type="number" min="0" inputmode="numeric" value="${esc(m.price)}"></div>
       <div class="f-cat"><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
-      <div class="f-act"><label>פעילה</label><select data-f="active"><option${m.active!=="לא"?" selected":""}>כן</option><option${m.active==="לא"?" selected":""}>לא</option></select></div>
+      <div class="f-act"><label class="active-toggle"><input data-f="active" type="checkbox"${m.active!=="לא"?" checked":""}>מוצגת בתפריט</label></div>
       <div class="f-desc"><label>תיאור</label><textarea data-f="desc" rows="3">${esc(m.desc)}</textarea></div>
       <div class="f-img"><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg" dir="ltr"></div>
     </div>
@@ -350,7 +352,7 @@ document.addEventListener("click",async e=>{
   else if(b.id==="saveAll"){
     // שומרים את כל המנות ששונו בלחיצה אחת
     const cards=[...document.querySelectorAll("#menu .card.dirty")];if(!cards.length)return;
-    const items=cards.map(c=>{const it={row:Number(c.dataset.row)};c.querySelectorAll("[data-f]").forEach(i=>it[i.dataset.f]=i.value.trim());return it});
+    const items=cards.map(c=>{const it={row:Number(c.dataset.row)};c.querySelectorAll("[data-f]").forEach(i=>it[i.dataset.f]=i.type==="checkbox"?(i.checked?"כן":"לא"):i.value.trim());return it});
     const bad=items.findIndex(it=>!it.name||it.price==="");
     if(bad>=0){toast("חסר שם או מחיר במנה");cards[bad].scrollIntoView({block:"center"});cards[bad].querySelector("input").focus();return}
     busy(1);let fail=0,err="";
