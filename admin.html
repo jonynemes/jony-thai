@@ -40,6 +40,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .tabs .tab.on[data-tab="prep"]{background:#8e5bd8;border-color:#8e5bd8;color:#fff}
 .tabs .tab.on[data-tab="ready"]{background:#2e9d5b;border-color:#2e9d5b;color:#fff}
 .tabs .tab.on[data-tab="done"]{background:#8a8f8c;border-color:#8a8f8c;color:#fff}
+.tabs .tab.on[data-tab="cancel"]{background:#b23a3a;border-color:#b23a3a;color:#fff}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
 .tabs label input{width:auto}
 .card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:12px;padding:.9rem 1rem;margin:.8rem 0}
@@ -49,6 +50,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .card[data-s="בהכנה"]{border-inline-start-color:#8e5bd8}
 .card[data-s="מוכנה"]{border-inline-start-color:#2e9d5b}
 .card[data-s="נמסרה"]{border-inline-start-color:#8a8f8c;opacity:.7}
+.card[data-s="בוטלה"]{border-inline-start-color:#b23a3a;opacity:.6}
 .oh{display:flex;justify-content:space-between;gap:1rem;font-weight:800}
 .oh span{font-weight:400;opacity:.75}
 .who{margin:.3rem 0}
@@ -116,6 +118,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="tab" data-tab="prep">בהכנה <span data-cnt="prep"></span></button>
       <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
       <button class="tab" data-tab="done">נמסרה <span data-cnt="done"></span></button>
+      <button class="tab" data-tab="cancel">בוטלה <span data-cnt="cancel"></span></button>
       <button class="refresh" id="refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>רענון</button>
     </div>
     <div id="orders"></div>
@@ -156,7 +159,7 @@ async function loadOrders(initial,silent){
     const d=await get("orders",silent);
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
-    STATUSES=d.statuses;ORDERS=d.orders.map(fixLegacy);applyOverrides();
+    STATUSES=[...d.statuses];if(!STATUSES.includes("בוטלה"))STATUSES.push("בוטלה");ORDERS=d.orders.map(fixLegacy);applyOverrides();
     const nos=new Set(ORDERS.map(o=>o.orderNo));
     if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
     known=nos;
@@ -174,9 +177,9 @@ function postErr(r){return {"not found":"ההזמנה לא נמצאה בגילי
 const OVR={};
 function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
 // סינון לפי סטטוס
-const FILTERS={new:["חדשה","דווח תשלום"],paid:["שולם"],prep:["בהכנה"],ready:["מוכנה"],done:["נמסרה"]};
+const FILTERS={new:["חדשה","דווח תשלום"],paid:["שולם"],prep:["בהכנה"],ready:["מוכנה"],done:["נמסרה"],cancel:["בוטלה"]};
 const inTab=(o,t)=>t==="all"||(FILTERS[t]||[]).includes(o.status);
-const EMPTY={all:"אין הזמנות.",new:"אין הזמנות חדשות.",paid:"אין הזמנות ששולמו.",prep:"אין הזמנות בהכנה.",ready:"אין הזמנות מוכנות.",done:"אין הזמנות שנמסרו."};
+const EMPTY={all:"אין הזמנות.",new:"אין הזמנות חדשות.",paid:"אין הזמנות ששולמו.",prep:"אין הזמנות בהכנה.",ready:"אין הזמנות מוכנות.",done:"אין הזמנות שנמסרו.",cancel:"אין הזמנות שבוטלו."};
 function renderOrders(){
   document.querySelectorAll("[data-cnt]").forEach(s=>{const t=s.dataset.cnt,n=ORDERS.filter(o=>inTab(o,t)).length;s.textContent=n?"("+n+")":""});
   const list=ORDERS.filter(o=>inTab(o,tab));
