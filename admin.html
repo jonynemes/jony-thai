@@ -29,10 +29,13 @@ header .ghost{border-color:var(--gold2);color:var(--gold2)}
 input,select,textarea{font:inherit;padding:.5rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
 .tabs{display:flex;gap:.5rem;margin:.5rem 0 1rem;flex-wrap:wrap;align-items:center;justify-content:flex-start;position:relative;min-height:2.7rem}
-.refresh{position:absolute;left:0;display:inline-flex;align-items:center;gap:.45rem;background:#4a84d4;color:#fff;box-shadow:0 2px 8px rgba(74,132,212,.3)}
+.tacts{position:absolute;left:0;display:flex;gap:.5rem;align-items:center}
+.refresh{display:inline-flex;align-items:center;gap:.45rem;background:#4a84d4;color:#fff;box-shadow:0 2px 8px rgba(74,132,212,.3)}
+.closeday{display:inline-flex;align-items:center;gap:.45rem;background:var(--card);border:2px solid #8a8f8c;color:var(--ink)}
+.closeday:hover{border-color:var(--saffron);color:var(--saffron)}
 .refresh:hover{background:#3d74c2}
 .refresh.spinning svg{animation:sp .8s linear infinite}
-@media (max-width:640px){.refresh{position:static}}
+@media (max-width:640px){.tacts{position:static}}
 .tabs .tab{background:var(--card);border:2px solid var(--line);color:var(--ink)}
 .tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
 .tabs .tab.on[data-tab="new"]{background:#e8731a;border-color:#e8731a;color:#fff}
@@ -196,7 +199,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
       <button class="tab" data-tab="done">נמסרה <span data-cnt="done"></span></button>
       <button class="tab" data-tab="cancel">בוטלה <span data-cnt="cancel"></span></button>
-      <button class="refresh" id="refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>רענון</button>
+      <div class="tacts"><button class="closeday tab-only" id="closeDay" title="העברת הזמנות שנמסרו או בוטלו לארכיון"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>סגירת יום</button><button class="refresh" id="refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>רענון</button></div>
     </div>
     <div id="orders"></div>
     <div id="menu" hidden></div>
@@ -321,7 +324,7 @@ document.addEventListener("click",async e=>{
   if(b.dataset.view){
     const v=b.dataset.view,other=v!=="orders";
     document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x===b));
-    document.querySelectorAll(".tab").forEach(t=>t.hidden=other);
+    document.querySelectorAll(".tab,.tab-only").forEach(t=>t.hidden=other);
     if(other){if(tab!=="menu"&&tab!=="lists")lastTab=tab;tab=v}else{tab=lastTab}
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
     $("#orders").hidden=other;$("#menu").hidden=v!=="menu";$("#lists").hidden=v!=="lists";
@@ -347,6 +350,17 @@ document.addEventListener("click",async e=>{
     toast(items.length>1?`נשמרו ${items.length} מנות`:"נשמר");await loadMenu();
   }
 });
+// סגירת יום: הזמנות שנמסרו או בוטלו עוברות ללשונית ארכיון בגיליון
+$("#closeDay").onclick=async()=>{
+  const done=ORDERS.filter(o=>o.status==="נמסרה"||o.status==="בוטלה").length,open=ORDERS.length-done;
+  if(!done){toast("אין הזמנות שנמסרו או בוטלו להעברה");return}
+  if(!confirm(`סגירת יום:\n${done} הזמנות שנמסרו או בוטלו יעברו ללשונית ארכיון בגיליון.`+(open?`\n${open} הזמנות פתוחות יישארו כאן.`:"")+"\n\nלהמשיך?"))return;
+  const res=await post({action:"closeDay"});
+  if(res==="nothing"){toast("אין הזמנות שנמסרו או בוטלו להעברה");return}
+  if(!res.startsWith("ok")){toast(postErr(res));return}
+  const [,n,name]=res.split(":");
+  toast(`${n} הזמנות הועברו ל"${name}"`);await loadOrders();
+};
 // מסמנים מנות שעודכנו, כדי לשמור רק אותן
 function markDirty(){const n=document.querySelectorAll("#menu .card.dirty").length,s=$("#saveAll");if(!s)return;s.disabled=!n;$("#mdirty").textContent=n?(n===1?"מנה אחת עודכנה":n+" מנות עודכנו"):""}
 document.addEventListener("input",e=>{const c=e.target.closest("#menu .card");if(!c)return;c.classList.add("dirty");markDirty()});

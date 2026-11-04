@@ -144,6 +144,51 @@ function listOp_(d) {
   return text_("unknown action");
 }
 
+// ===== סגירת יום =====
+// מעביר הזמנות שנמסרו או בוטלו ללשונית ארכיון לפי תאריך, ומשאיר בלשונית ההזמנות רק הזמנות פתוחות.
+const ARCHIVE_STATUSES = ["נמסרה", "בוטלה"];
+function closeDay_() {
+  const ss = SpreadsheetApp.getActive();
+  const sh = sheet_(ORDERS);
+  const data = sh.getDataRange().getValues();
+  const keep = [], move = [];
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i][C.no]) continue;
+    (ARCHIVE_STATUSES.indexOf(String(data[i][C.status])) >= 0 ? move : keep).push(i + 1);
+  }
+  if (!move.length) return text_("nothing");
+
+  const name = "ארכיון " + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd.MM.yyyy");
+  let ar = ss.getSheetByName(name);
+  if (!ar) {
+    // העתק של לשונית ההזמנות שומר על העיצוב, הרוחבים והכיוון
+    ar = sh.copyTo(ss).setName(name);
+    if (ar.getLastRow() > 1) ar.getRange(2, 1, ar.getMaxRows() - 1, ar.getMaxColumns()).clearContent().clearDataValidations();
+    ss.setActiveSheet(ar); ss.moveActiveSheet(ss.getNumSheets());
+    ss.setActiveSheet(sh);
+  } else {
+    // אם כבר נסגר יום היום – מוחקים את שורת הסיכום הקודמת ומוסיפים אחריה
+    const last = ar.getLastRow();
+    if (last > 1 && String(ar.getRange(last, 1).getValue()).indexOf("סיכום") === 0) ar.deleteRow(last);
+  }
+
+  const rows = move.map(function (r) { return data[r - 1].slice(0, HEADERS.length); });
+  const start = Math.max(ar.getLastRow(), 1) + 1;
+  ar.getRange(start, 1, rows.length, HEADERS.length).setValues(rows);
+
+  // שורת סיכום: כמה הזמנות נמסרו ובאיזה סכום
+  const all = ar.getRange(2, 1, ar.getLastRow() - 1, HEADERS.length).getValues();
+  let n = 0, sum = 0;
+  all.forEach(function (r) { if (r[C.status] === "נמסרה") { n++; sum += Number(r[C.total]) || 0; } });
+  const summary = new Array(HEADERS.length).fill("");
+  summary[0] = "סיכום"; summary[C.name] = n + " הזמנות נמסרו"; summary[C.total] = sum;
+  ar.getRange(ar.getLastRow() + 1, 1, 1, HEADERS.length).setValues([summary]).setFontWeight("bold").setBackground("#fff4d6");
+
+  // מוחקים מלשונית ההזמנות מלמטה למעלה, כדי שמספרי השורות לא יזוזו
+  move.sort(function (a, b) { return b - a; }).forEach(function (r) { sh.deleteRow(r); });
+  return text_("ok:" + move.length + ":" + name);
+}
+
 // האם האתר מקבל הזמנות (נשמר בהגדרות הסקריפט; ברירת מחדל: פתוח)
 function isOpen_() { return PropertiesService.getScriptProperties().getProperty("open") !== "no"; }
 
@@ -243,6 +288,8 @@ function adminOp_(d) {
     PropertiesService.getScriptProperties().setProperty("open", d.open ? "yes" : "no");
     return text_("ok");
   }
+
+  if (d.action === "closeDay") return closeDay_();
 
   if (d.action === "deleteOrder") {
     const sh = sheet_(ORDERS);
