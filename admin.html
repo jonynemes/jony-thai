@@ -252,8 +252,10 @@ html,body{overflow-x:clip}
   .stlong{display:none}
   .shopchk{font-size:.9rem}
   /* פילטרים: רשת מסודרת של 4 בשורה, ופעולות (סגירת יום / רענון / הוספת מנה) בשורה משלהן למעלה */
-  .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.4rem;margin:.3rem 0 .9rem;min-height:0}
-  .tabs .tab{padding:.5rem .15rem;font-size:.86rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* פילטרי הסטטוס: שורה אחת עם גלילה פנימית בסווייפ */
+  .tabs{display:flex;flex-wrap:nowrap;gap:.4rem;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:.3rem -12px .9rem;padding:.15rem 12px .35rem;min-height:0}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs .tab{flex:0 0 auto;padding:.5rem .95rem;font-size:.9rem;white-space:nowrap}
   .tacts{grid-column:1/-1;order:-1;display:flex;gap:.5rem}
   .tacts>button{flex:1;justify-content:center;padding:.55rem .6rem}
   .tabs .tab,.tacts>button,.adddish,.ltab{border-radius:10px}
@@ -275,7 +277,7 @@ html,body{overflow-x:clip}
   .stf-acts{width:100%}
   .stf .ghost.sm{flex:1;justify-content:center}
   .tacts{display:none!important} /* במובייל: בלי רענון ובלי סגירת יום (סגירת יום רק במחשב) */
-  .adddish{grid-column:1/-1}
+  .adddish{flex:1 1 100%}
   .ltabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
   .ltab{grid-column:span 2;min-width:0;white-space:nowrap;padding-inline:.3rem}
   .ltab:nth-child(n+4){grid-column:span 3}
