@@ -126,6 +126,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
 #menu .card.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
+.osum{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:color-mix(in srgb,var(--gold) 14%,var(--card));border:1.5px solid var(--gold);border-radius:var(--r);padding:.9rem 1.1rem;margin:.8rem 0 1.4rem;font-weight:800;font-size:1.15rem}
+.osum b{font-size:1.45rem;color:var(--saffron)}.osum small{font-weight:600;opacity:.75;font-size:.9rem}
 /* משתמש צפייה בלבד */
 .rolebadge{display:inline-block;vertical-align:middle;margin-inline-start:.5rem;background:#2f7de1;color:#fff;font-family:'Heebo',sans-serif;font-weight:800;font-size:.8rem;padding:.2rem .7rem;border-radius:999px}
 .rolebadge[hidden]{display:none}
@@ -348,7 +350,13 @@ function renderOrders(){
       ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
       <div class="of"><b><span class="nis">₪</span>${esc(o.total)}</b>
         <div class="st"><select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}"${ROLE==="staff"&&o.status==="בוטלה"?" disabled":""}>${STATUSES.filter(s=>s!=="דווח תשלום"&&!(ROLE==="staff"&&s==="בוטלה"&&o.status!=="בוטלה")).map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
-    </div>`).join(""):`<div class="empty">${empty}</div>`;
+    </div>`).join("")+sumRow(list):`<div class="empty">${empty}</div>`;
+}
+// שורת סיכום בתחתית: סה"כ סכום ההזמנות שמוצגות בסינון הנוכחי (בלי הזמנות שבוטלו, חוץ מבסינון "בוטלה")
+function sumRow(list){
+  const counted=tab==="cancel"?list:list.filter(o=>o.status!=="בוטלה");
+  const sum=counted.reduce((a,o)=>a+(Number(o.total)||0),0),skip=list.length-counted.length;
+  return `<div class="osum"><span>סה"כ ${counted.length===1?"הזמנה אחת":counted.length+" הזמנות"}${skip?` <small>(לא כולל ${skip} שבוטלו)</small>`:""}</span><b><span class="nis">₪</span>${sum.toLocaleString("he-IL")}</b></div>`;
 }
 
 async function loadMenu(){
