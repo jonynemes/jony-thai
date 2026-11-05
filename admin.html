@@ -133,7 +133,7 @@ body.staff [data-view="menu"],body.staff [data-view="staff"],body.staff #closeDa
 body.staff #lists .lform,body.staff #lists .lic,body.staff [data-lclear],body.staff [data-lreset],body.staff [data-addshop],body.staff [data-addprep],body.staff [data-raddrow],body.staff [data-rsave],body.staff [data-rdel]{display:none!important}
 body.staff #lists input,body.staff #lists select,body.staff #lists textarea{pointer-events:none;opacity:.85}
 /* מסך צוות */
-.stf{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid #2f7de1;border-radius:var(--r);padding:1.1rem 1.2rem;margin:.8rem 0;max-width:760px}
+.stf{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid #2f7de1;border-radius:var(--r);padding:1.1rem 1.2rem;margin:.8rem auto;max-width:760px}
 .stf h2{font-size:1.4rem;margin-bottom:.3rem}
 .stf-help{margin:.2rem 0 1rem;opacity:.85;line-height:1.6}
 .stf-add{display:grid;grid-template-columns:1.3fr 1.3fr auto;gap:.6rem;align-items:center;margin-bottom:1rem}
@@ -720,8 +720,8 @@ document.addEventListener("click",async e=>{
   }
   if(b.dataset.sdel){
     const n=b.dataset.sdel;
-    if(!confirm("להסיר את "+n+"?\nהסיסמה שלו תפסיק לעבוד מיד."))return;
-    const r=await post({action:"staffDelete",name:n});
+    const a=await askAdmin("כדי להסיר את "+n+" יש להזין את סיסמת המנהל. הסיסמה שלו תפסיק לעבוד מיד.");if(!a)return;
+    const r=await post({action:"staffDelete",name:n,confirm:a});
     if(r!=="ok"){toast(postErr(r));return}
     STAFF=STAFF.filter(x=>x!==n);delete REVEALED[n];if(NEWPASS&&NEWPASS.n===n)NEWPASS=null;renderStaff();toast("הוסר");
   }

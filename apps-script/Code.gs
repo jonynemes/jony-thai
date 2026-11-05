@@ -371,6 +371,7 @@ function adminOp_(d) {
     return text_("ok");
   }
   if (d.action === "staffDelete") {
+    if (!reauth_(d)) return text_("bad admin");
     staffSave_(staffList_().filter(function (s) { return s.n !== d.name; }));
     return text_("ok");
   }
