@@ -148,6 +148,21 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
 @media (hover:hover){.stf .ghost:hover{background:color-mix(in srgb,#2f7de1 30%,var(--card))}}
 .stf-pw .ghost{font-size:1.2rem;padding:.35rem .8rem}
 #app:has(#staff:not([hidden])) .shopbar{display:none}
+.stf-list li{flex-wrap:wrap;gap:.5rem}
+.stf-n{flex:1;min-width:6rem}
+.stf-acts{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.stf .ghost.sm{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .7rem;font-size:.9rem}
+.stf-shown{display:flex;align-items:center;gap:.4rem}
+.stf-shown code{font-size:1.05rem;font-weight:800;background:color-mix(in srgb,#2e9d5b 18%,var(--card));border:1.5px solid #2e9d5b;padding:.2rem .6rem;border-radius:var(--r);user-select:all}
+/* חלון קופץ לאימות מנהל */
+.amodal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
+.abox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-top:5px solid var(--gold);border-radius:var(--r);padding:1.2rem 1.3rem;width:min(420px,100%);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.abox h3{font-family:'Suez One',serif;font-weight:400;font-size:1.35rem;margin:0 0 .4rem}
+.abox p{margin:0 0 .9rem;opacity:.85;line-height:1.55}
+.abox label{display:block;font-weight:700;margin-bottom:.8rem}
+.apw{display:flex;gap:.4rem;margin-top:.35rem}.apw input{flex:1;font-family:ui-monospace,Consolas,monospace;font-size:1.05rem}
+.abtns{display:flex;gap:.6rem;justify-content:flex-end;margin-top:.4rem}
+.abox .ghost{background:color-mix(in srgb,#2f7de1 16%,var(--card));color:var(--ink);border:1.5px solid #2f7de1;border-radius:var(--r);padding:.5rem 1rem;font-weight:800}
 .msave{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.7rem 1rem;margin:.8rem 0;box-shadow:0 -4px 16px rgba(0,0,0,.18)}
 .msave #saveAll{margin-inline-start:auto;font-size:1.05rem;padding:.7rem 1.6rem}
 .msave #saveAll:disabled{opacity:.45;cursor:default}
@@ -312,7 +327,7 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
-function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר","readonly":"אין הרשאה – רק המנהל יכול לעשות את זה","forbidden":"אין הרשאה – רק המנהל יכול לבטל הזמנה","bad name":"חסר שם","short pass":"הסיסמה קצרה מדי (לפחות 8 תווים)","same as admin":"אי אפשר להשתמש בסיסמת המנהל","name exists":"כבר יש איש צוות בשם הזה","pass exists":"הסיסמה הזאת כבר בשימוש – בחרו אחרת"}[r]||("השמירה נכשלה: "+r)}
+function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר","readonly":"אין הרשאה – רק המנהל יכול לעשות את זה","forbidden":"אין הרשאה – רק המנהל יכול לבטל הזמנה","bad name":"חסר שם","short pass":"הסיסמה קצרה מדי (לפחות 8 תווים)","same as admin":"אי אפשר להשתמש בסיסמת המנהל","name exists":"כבר יש איש צוות בשם הזה","pass exists":"הסיסמה הזאת כבר בשימוש – בחרו אחרת","bad admin":"סיסמת המנהל שגויה","no reveal":"אי אפשר להציג את הסיסמה הזאת (נשמרה לפני שהאפשרות נוספה, או שסיסמת המנהל הוחלפה מאז). אפשר לשנות לה סיסמה."}[r]||("השמירה נכשלה: "+r)}
 // סטטוסים ששונו כאן וטרם אושרו מהגיליון – מוצגים מיד ונשמרים עד שהגיליון מתעדכן
 const OVR={};
 function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
@@ -619,7 +634,9 @@ document.addEventListener("toggle",e=>{const t=e.target;if(t.classList&&t.classL
 </script>
 <script>
 // ===== מסך צוות: ניהול סיסמאות לאנשי צוות (רק למנהל) =====
-let STAFF=[],NEWPASS=null;
+let STAFF=[],NEWPASS=null;const REVEALED={};
+const EYE='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const KEYIC='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M16 7l3 3M18.5 4.5l2 2"/></svg>';
 function genPass(){const a="abcdefghjkmnpqrstuvwxyz23456789";const r=crypto.getRandomValues(new Uint32Array(10));return [...r].map(x=>a[x%a.length]).join("")}
 async function loadStaff(){
   try{
@@ -628,24 +645,54 @@ async function loadStaff(){
     STAFF=d.staff||[];renderStaff();
   }catch(e){toast("שגיאת חיבור")}
 }
+function staffRow(n){
+  const p=REVEALED[n];
+  return `<li><span class="stf-n">${esc(n)}</span>
+    ${p!==undefined?`<span class="stf-shown"><code dir="ltr">${esc(p)}</code><button class="ghost sm" data-scopy="${esc(n)}">העתקה</button><button class="ghost sm" data-shide="${esc(n)}">הסתרה</button></span>`:""}
+    <span class="stf-acts">
+      ${p===undefined?`<button class="ghost sm" data-sview="${esc(n)}">${EYE}הצגת סיסמה</button>`:""}
+      <button class="ghost sm" data-schg="${esc(n)}">${KEYIC}שינוי סיסמה</button>
+      <button class="lic del" data-sdel="${esc(n)}" title="הסרה" aria-label="הסרת ${esc(n)}">${TRASH}</button>
+    </span></li>`;
+}
 function renderStaff(){
   $("#staff").innerHTML=`
   <div class="stf">
     <h2>אנשי צוות</h2>
     <p class="stf-help">איש צוות נכנס לממשק עם הסיסמה שלו. הוא רואה את ההזמנות והרשימות, ויכול לשנות סטטוס של הזמנה (שולם, בהכנה, מוכנה, נמסרה) – אבל לא לבטל, לא למחוק, לא לסגור יום, לא לשנות תפריט ולא לסגור את ההזמנות באתר.</p>
-    ${NEWPASS?`<div class="stf-new"><b>נוצרה סיסמה ל${esc(NEWPASS.n)}:</b> <code dir="ltr">${esc(NEWPASS.p)}</code> <button class="ghost" data-scopy>העתקה</button><div class="stf-note">שמרו או שלחו אותה עכשיו – מטעמי אבטחה היא לא תוצג שוב.</div></div>`:""}
+    ${NEWPASS?`<div class="stf-new"><b>נוצרה סיסמה ל${esc(NEWPASS.n)}:</b> <code dir="ltr">${esc(NEWPASS.p)}</code> <button class="ghost" data-scopy="${esc(NEWPASS.n)}">העתקה</button><div class="stf-note">אפשר לראות אותה שוב בכל זמן בכפתור "הצגת סיסמה" (עם סיסמת המנהל).</div></div>`:""}
     <div class="stf-add">
       <input id="stfName" placeholder="שם איש הצוות" maxlength="40">
       <div class="stf-pw"><input id="stfPass" dir="ltr" value="${genPass()}" maxlength="64" aria-label="סיסמה"><button class="ghost" data-sgen title="סיסמה חדשה">↻</button></div>
       <button class="primary" data-sadd>הוספה</button>
     </div>
-    ${STAFF.length?`<ul class="stf-list">${STAFF.map(n=>`<li><span>${esc(n)}</span><button class="lic del" data-sdel="${esc(n)}" title="הסרה" aria-label="הסרת ${esc(n)}">${TRASH}</button></li>`).join("")}</ul>`:`<div class="empty">עדיין אין אנשי צוות.</div>`}
+    ${STAFF.length?`<ul class="stf-list">${STAFF.map(staffRow).join("")}</ul>`:`<div class="empty">עדיין אין אנשי צוות.</div>`}
   </div>`;
 }
+// חלון קופץ: מחזיר את הערכים שהוזנו, או null אם בוטל
+function askModal({title,text,fields,ok}){
+  return new Promise(res=>{
+    const w=document.createElement("div");w.className="amodal";
+    w.innerHTML=`<form class="abox" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <h3>${esc(title)}</h3>${text?`<p>${esc(text)}</p>`:""}
+      ${fields.map(f=>`<label>${esc(f.label)}<span class="apw"><input name="${f.id}" type="${f.type||"text"}" dir="ltr" value="${esc(f.value||"")}" autocomplete="${f.type==="password"?"current-password":"off"}">${f.gen?`<button type="button" class="ghost" data-agen="${f.id}" title="סיסמה חדשה">↻</button>`:""}</span></label>`).join("")}
+      <div class="abtns"><button type="button" class="ghost" data-acancel>ביטול</button><button type="submit" class="primary">${esc(ok||"אישור")}</button></div>
+    </form>`;
+    const close=v=>{w.remove();document.removeEventListener("keydown",esc_);res(v)};
+    const esc_=e=>{if(e.key==="Escape")close(null)};
+    document.addEventListener("keydown",esc_);
+    w.addEventListener("click",e=>{if(e.target===w||e.target.closest("[data-acancel]"))close(null);const g=e.target.closest("[data-agen]");if(g)w.querySelector(`[name="${g.dataset.agen}"]`).value=genPass()});
+    w.querySelector("form").onsubmit=e=>{e.preventDefault();const v={};fields.forEach(f=>v[f.id]=w.querySelector(`[name="${f.id}"]`).value.trim());close(v)};
+    document.body.appendChild(w);w.querySelector("input").focus();
+  });
+}
+const askAdmin=why=>askModal({title:"אימות מנהל",text:why,fields:[{id:"a",label:"סיסמת המנהל",type:"password"}],ok:"המשך"}).then(v=>v&&v.a?v.a:null);
+
 document.addEventListener("click",async e=>{
   const b=e.target.closest("#staff button");if(!b)return;
   if(b.hasAttribute("data-sgen")){$("#stfPass").value=genPass();return}
-  if(b.hasAttribute("data-scopy")){try{await navigator.clipboard.writeText(NEWPASS.p);toast("הסיסמה הועתקה")}catch(_){toast("לא הצלחנו להעתיק – סמנו והעתיקו ידנית")}return}
+  if(b.dataset.scopy!==undefined){const n=b.dataset.scopy,p=REVEALED[n]!==undefined?REVEALED[n]:(NEWPASS&&NEWPASS.n===n?NEWPASS.p:"");try{await navigator.clipboard.writeText(p);toast("הסיסמה הועתקה")}catch(_){toast("לא הצלחנו להעתיק – סמנו והעתיקו ידנית")}return}
+  if(b.dataset.shide){delete REVEALED[b.dataset.shide];renderStaff();return}
   if(b.hasAttribute("data-sadd")){
     const n=$("#stfName").value.trim(),p=$("#stfPass").value.trim();
     if(!n){toast("חסר שם");$("#stfName").focus();return}
@@ -654,12 +701,29 @@ document.addEventListener("click",async e=>{
     if(r!=="ok"){toast(postErr(r));return}
     NEWPASS={n,p};STAFF.push(n);renderStaff();toast("איש הצוות נוסף");return;
   }
+  if(b.dataset.sview){
+    const n=b.dataset.sview,a=await askAdmin("כדי להציג את הסיסמה של "+n+" יש להזין את סיסמת המנהל.");if(!a)return;
+    const r=await post({action:"staffReveal",name:n,confirm:a});
+    if(!r.startsWith("pass:")){toast(postErr(r));return}
+    REVEALED[n]=r.slice(5);renderStaff();return;
+  }
+  if(b.dataset.schg){
+    const n=b.dataset.schg,a=await askAdmin("כדי לשנות את הסיסמה של "+n+" יש להזין את סיסמת המנהל.");if(!a)return;
+    const ck=await post({action:"adminCheck",confirm:a});
+    if(ck!=="ok"){toast(postErr(ck));return}
+    const v=await askModal({title:"סיסמה חדשה ל"+n,text:"הסיסמה הקודמת תפסיק לעבוד מיד.",fields:[{id:"p",label:"סיסמה חדשה (לפחות 8 תווים)",value:genPass(),gen:true}],ok:"שמירה"});
+    if(!v)return;
+    if(v.p.length<8){toast("הסיסמה קצרה מדי (לפחות 8 תווים)");return}
+    const r=await post({action:"staffChange",name:n,pass:v.p,confirm:a});
+    if(r!=="ok"){toast(postErr(r));return}
+    REVEALED[n]=v.p;renderStaff();toast("הסיסמה עודכנה");return;
+  }
   if(b.dataset.sdel){
     const n=b.dataset.sdel;
     if(!confirm("להסיר את "+n+"?\nהסיסמה שלו תפסיק לעבוד מיד."))return;
     const r=await post({action:"staffDelete",name:n});
     if(r!=="ok"){toast(postErr(r));return}
-    STAFF=STAFF.filter(x=>x!==n);if(NEWPASS&&NEWPASS.n===n)NEWPASS=null;renderStaff();toast("הוסר");
+    STAFF=STAFF.filter(x=>x!==n);delete REVEALED[n];if(NEWPASS&&NEWPASS.n===n)NEWPASS=null;renderStaff();toast("הוסר");
   }
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest("#staff .stf-add input")){e.preventDefault();document.querySelector("#staff [data-sadd]").click()}});

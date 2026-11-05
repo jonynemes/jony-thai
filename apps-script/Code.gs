@@ -17,7 +17,7 @@ function json_(o) {
 function text_(t) { return ContentService.createTextOutput(t); }
 function sheet_(n) { return SpreadsheetApp.getActive().getSheetByName(n); }
 // ===== צוות =====
-// כל איש צוות: { n: שם, h: גיבוב SHA-256 של הסיסמה }. הסיסמה עצמה לא נשמרת בשום מקום.
+// כל איש צוות: { n: שם, h: גיבוב SHA-256 של הסיסמה, e: הסיסמה מוצפנת בסיסמת המנהל }.
 function hash_(k) {
   return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(k), Utilities.Charset.UTF_8));
 }
@@ -25,6 +25,36 @@ function staffList_() {
   try { return JSON.parse(PropertiesService.getScriptProperties().getProperty("staff") || "[]"); } catch (e) { return []; }
 }
 function staffSave_(list) { PropertiesService.getScriptProperties().setProperty("staff", JSON.stringify(list)); }
+// הצפנת הסיסמה עם מפתח המנהל (HMAC-SHA256 כזרם מפתח), כדי שאפשר יהיה להציג אותה – רק למי שיודע את סיסמת המנהל
+function keystream_(iv, len) {
+  const out = [];
+  for (let i = 0; out.length < len; i++) {
+    const blk = Utilities.computeHmacSha256Signature(iv + ":" + i, ADMIN_KEY);
+    for (let j = 0; j < blk.length && out.length < len; j++) out.push(blk[j]);
+  }
+  return out;
+}
+function enc_(plain) {
+  const iv = Utilities.getUuid();
+  const b = Utilities.newBlob(String(plain)).getBytes(), ks = keystream_(iv, b.length);
+  const x = b.map(function (v, i) { const r = (v ^ ks[i]) & 255; return r > 127 ? r - 256 : r; });
+  return { iv: iv, c: Utilities.base64Encode(x) };
+}
+function dec_(e) {
+  if (!e || !e.iv) return null;
+  const b = Utilities.base64Decode(e.c), ks = keystream_(e.iv, b.length);
+  const x = b.map(function (v, i) { const r = (v ^ ks[i]) & 255; return r > 127 ? r - 256 : r; });
+  return Utilities.newBlob(x).getDataAsString("UTF-8");
+}
+// אימות חוזר של סיסמת המנהל לפני הצגה או שינוי של סיסמת צוות
+function reauth_(d) { return isAdmin_(d.confirm); }
+function checkPass_(list, pass, exceptName) {
+  if (pass.length < 8) return "short pass";
+  if (pass === ADMIN_KEY) return "same as admin";
+  const h = hash_(pass);
+  if (list.some(function (s) { return s.h === h && s.n !== exceptName; })) return "pass exists";
+  return "";
+}
 function staffOf_(k) {
   if (!k || String(k).length < 8) return null;
   const h = hash_(k);
@@ -311,12 +341,32 @@ function adminOp_(d) {
   if (d.action === "staffAdd") {
     const name = clean_(d.name).trim().slice(0, 40), pass = String(d.pass || "");
     if (!name) return text_("bad name");
-    if (pass.length < 8) return text_("short pass");
-    if (pass === ADMIN_KEY) return text_("same as admin");
-    const list = staffList_(), h = hash_(pass);
+    const list = staffList_();
     if (list.some(function (s) { return s.n === name; })) return text_("name exists");
-    if (list.some(function (s) { return s.h === h; })) return text_("pass exists");
-    list.push({ n: name, h: h });
+    const bad = checkPass_(list, pass, null);
+    if (bad) return text_(bad);
+    list.push({ n: name, h: hash_(pass), e: enc_(pass) });
+    staffSave_(list);
+    return text_("ok");
+  }
+  if (d.action === "adminCheck") return text_(reauth_(d) ? "ok" : "bad admin");
+  if (d.action === "staffReveal") {
+    if (!reauth_(d)) return text_("bad admin");
+    const s = staffList_().filter(function (x) { return x.n === d.name; })[0];
+    if (!s) return text_("not found");
+    const p = dec_(s.e);
+    // אם הסיסמה נשמרה לפני האפשרות הזאת, או שסיסמת המנהל הוחלפה מאז – אי אפשר לשחזר
+    if (p === null || hash_(p) !== s.h) return text_("no reveal");
+    return text_("pass:" + p);
+  }
+  if (d.action === "staffChange") {
+    if (!reauth_(d)) return text_("bad admin");
+    const list = staffList_(), pass = String(d.pass || "");
+    const s = list.filter(function (x) { return x.n === d.name; })[0];
+    if (!s) return text_("not found");
+    const bad = checkPass_(list, pass, s.n);
+    if (bad) return text_(bad);
+    s.h = hash_(pass); s.e = enc_(pass);
     staffSave_(list);
     return text_("ok");
   }
