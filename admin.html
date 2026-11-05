@@ -231,6 +231,49 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
 .rhead{font-size:.8rem;font-weight:700;opacity:.6;margin:.4rem 0 .2rem}
 .rrow{margin-bottom:.45rem}
 [hidden]{display:none!important}
+/* ===== מובייל: הכל נכנס ברוחב המסך, בלי גלילה הצידה ===== */
+html,body{overflow-x:clip}
+@media (max-width:640px){
+  main{padding:.8rem 12px 1.5rem}
+  header{padding:.7rem 12px;gap:.6rem}
+  header h1{font-size:1.12rem;line-height:1.3}
+  header #logout{padding:.4rem .9rem;font-size:.9rem}
+  .rolebadge{font-size:.72rem;padding:.15rem .55rem}
+  /* כפתורי המסכים: שורה אחת ברוחב מלא, כל כפתור באותו רוחב */
+  .views{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:.35rem;padding:.3rem;width:100%;box-sizing:border-box}
+  .view{padding:.6rem .2rem;font-size:.95rem;min-width:0;white-space:nowrap}
+  /* פס סגירת ההזמנות */
+  .shopbar{flex-wrap:wrap;gap:.35rem .8rem;padding:.6rem .8rem;margin:.1rem 0 .7rem}
+  .shopchk,.shopst{font-size:.95rem}
+  /* פילטרים: רשת מסודרת של 4 בשורה, ופעולות (סגירת יום / רענון / הוספת מנה) בשורה משלהן למעלה */
+  .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.4rem;margin:.3rem 0 .9rem;min-height:0}
+  .tabs .tab{padding:.5rem .15rem;font-size:.86rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tacts{grid-column:1/-1;order:-1;display:flex;gap:.5rem}
+  .tacts>button{flex:1;justify-content:center;padding:.55rem .6rem}
+  .adddish{order:-2}
+  /* כרטיסי הזמנה */
+  .card{padding:.75rem .8rem;margin:.6rem 0}
+  .oh{font-size:.92rem;gap:.5rem;flex-wrap:wrap}
+  .cust{gap:.25rem .9rem;padding:.5rem .7rem}
+  .of{gap:.6rem}
+  .of .st{flex:1;min-width:0;max-width:220px}
+  .of select{width:100%}
+  .osum{font-size:1rem;padding:.75rem .9rem}.osum b{font-size:1.25rem}
+  /* רשימות, תפריט וצוות */
+  .ltabs{gap:.35rem}.ltab{padding:.45rem .8rem;font-size:.9rem}
+  .lcard{padding:.45rem .7rem .7rem}
+  .msave{padding:.6rem .7rem;gap:.6rem}.msave #saveAll{padding:.6rem 1rem;font-size:.95rem}
+  .stf{padding:.9rem .8rem}
+  .stf-list li{align-items:flex-start}
+  .stf-acts{width:100%}
+  .stf .ghost.sm{flex:1;justify-content:center}
+  .tabs:has(#addDish:not([hidden])) .tacts,.adddish{grid-column:span 2}
+  .ltabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+  .ltab{grid-column:span 2;min-width:0;white-space:nowrap;padding-inline:.3rem}
+  .ltab:nth-child(n+4){grid-column:span 3}
+  .msave #saveAll{flex:1;margin-inline-start:0}
+  input,select,textarea{font-size:16px} /* מונע זום אוטומטי באייפון בזמן הקלדה */
+}
 </style>
 </head>
 <body>
