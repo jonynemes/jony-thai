@@ -222,6 +222,7 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
 .ltbl{width:100%;border-collapse:collapse}
 .ltbl td{padding:.55rem .3rem;border-bottom:1px solid var(--line);font-weight:600}
 .ltbl tr:last-child td{border-bottom:0}
+.ltbl tfoot td{border-top:2px solid var(--gold);border-bottom:0;font-weight:800;padding-top:.65rem}
 .ltbl .num{text-align:left;font-weight:800;font-size:1.15rem;color:var(--saffron);white-space:nowrap}
 .lwarn{color:#e5484d;font-weight:600;margin:.7rem 0 0}
 .linkb{background:none;padding:0;color:inherit;text-decoration:underline;border-radius:0}
@@ -621,7 +622,7 @@ function countView(){
   const scope=`<div class="lscope"><span>לפי הזמנות:</span><button class="chip${CNT_SCOPE==="open"?" on":""}" data-scope="open">כל הפתוחות</button><button class="chip${CNT_SCOPE==="paid"?" on":""}" data-scope="paid">רק שולמו ובהכנה</button></div>`;
   if(!c.dishes.length)return scope+`<div class="lcard"><div class="empty">אין הזמנות פתוחות כרגע.</div></div>`;
   return scope+`<div class="lcard"><h3 class="lh">כמה מנות להכין <small>${c.orders.length} הזמנות</small></h3>
-    <table class="ltbl"><tbody>${c.dishes.map(([n,d])=>`<tr><td>${esc(n)}${d.notes.length?`<div class="lnote">${esc(d.notes.join(" · "))}</div>`:""}</td><td class="num">${d.q}</td></tr>`).join("")}</tbody></table>
+    <table class="ltbl"><tbody>${c.dishes.map(([n,d])=>`<tr><td>${esc(n)}${d.notes.length?`<div class="lnote">${esc(d.notes.join(" · "))}</div>`:""}</td><td class="num">${d.q}</td></tr>`).join("")}</tbody><tfoot><tr><td>סה״כ מנות</td><td class="num">${c.dishes.reduce((s,[,d])=>s+(+d.q||0),0)}</td></tr></tfoot></table>
     <div class="lact"><button class="ghost" data-addprep>הוספה לרשימת ההכנות</button></div></div>
     <div class="lcard"><h3 class="lh">מצרכים שצריך</h3>
     ${c.ings.length?`<table class="ltbl"><tbody>${c.ings.map(x=>`<tr><td>${esc(x.ing)}</td><td class="num">${fmtQ(x.q)} ${esc(x.unit)}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">עדיין אין מתכונים למנות האלה.</div>`}
