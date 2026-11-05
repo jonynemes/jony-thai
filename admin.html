@@ -256,8 +256,8 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
     </div>
     <div class="tabs">
       <button class="adddish menu-only" id="addDish" hidden>+ הוספת מנה</button>
-      <button class="tab" data-tab="all">הכל <span data-cnt="all"></span></button>
-      <button class="tab on" data-tab="new">חדשות <span data-cnt="new"></span></button>
+      <button class="tab on" data-tab="all">הכל <span data-cnt="all"></span></button>
+      <button class="tab" data-tab="new">חדשות <span data-cnt="new"></span></button>
       <button class="tab" data-tab="paid">שולמו <span data-cnt="paid"></span></button>
       <button class="tab" data-tab="prep">בהכנה <span data-cnt="prep"></span></button>
       <button class="tab" data-tab="ready">מוכנה <span data-cnt="ready"></span></button>
@@ -278,8 +278,8 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
 const SHEETS_URL="https://script.google.com/macros/s/AKfycbxHnb1rh7o6rO2AN9aVRK-nHPhqIECX-4FyEIpjVhUoq5H4F_dAc0Q4EjD1OW-AM-rclQ/exec";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let lastTab="new";
-let ROLE="admin",KEY="",STATUSES=[],known=null,tab="new",ORDERS=[],timer=null,audio=null;
+let lastTab="all";
+let ROLE="admin",KEY="",STATUSES=[],known=null,tab="all",ORDERS=[],timer=null,audio=null;
 
 try{KEY=localStorage.getItem("jt_admin_key")||""}catch(e){}
 
