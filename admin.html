@@ -126,7 +126,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
 #menu .card.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
-.osum{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:color-mix(in srgb,var(--gold) 14%,var(--card));border:1.5px solid var(--gold);border-radius:var(--r);padding:.9rem 1.1rem;margin:.8rem 0 1.4rem;font-weight:800;font-size:1.15rem}
+.osum{position:sticky;bottom:12px;z-index:3;opacity:.9;box-shadow:0 6px 22px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:space-between;gap:1rem;background:color-mix(in srgb,var(--gold) 14%,var(--card));border:1.5px solid var(--gold);border-radius:var(--r);padding:.9rem 1.1rem;margin:.8rem 0 1.4rem;font-weight:800;font-size:1.15rem}
 .osum b{font-size:1.45rem;color:var(--saffron)}.osum small{font-weight:600;opacity:.75;font-size:.9rem}
 /* משתמש צפייה בלבד */
 .rolebadge{display:inline-block;vertical-align:middle;margin-inline-start:.5rem;background:#2f7de1;color:#fff;font-family:'Heebo',sans-serif;font-weight:800;font-size:.8rem;padding:.2rem .7rem;border-radius:999px}
@@ -268,7 +268,8 @@ html,body{overflow-x:clip}
   .stf-list li{align-items:flex-start}
   .stf-acts{width:100%}
   .stf .ghost.sm{flex:1;justify-content:center}
-  .tabs:has(#addDish:not([hidden])) .tacts,.adddish{grid-column:span 2}
+  .tacts{display:none!important} /* במובייל: בלי רענון ובלי סגירת יום (סגירת יום רק במחשב) */
+  .adddish{grid-column:1/-1}
   .ltabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
   .ltab{grid-column:span 2;min-width:0;white-space:nowrap;padding-inline:.3rem}
   .ltab:nth-child(n+4){grid-column:span 3}
