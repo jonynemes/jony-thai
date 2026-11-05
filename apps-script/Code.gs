@@ -1,6 +1,7 @@
 // ===== הגדרות =====
 // השאירו כאן את המפתח הסודי שלכם (12 תווים ומעלה). אל תשתפו אותו ואל תעלו אותו ל-GitHub.
 const ADMIN_KEY = "CHANGE_ME";
+// סיסמאות הצוות מנוהלות מתוך ממשק האדמין (מסך "צוות") ונשמרות מוצפנות בהגדרות הסקריפט – לא כאן ולא בגיליון.
 
 const ORDERS = "הזמנות";
 const MENU = "תפריט";
@@ -15,6 +16,22 @@ function json_(o) {
 }
 function text_(t) { return ContentService.createTextOutput(t); }
 function sheet_(n) { return SpreadsheetApp.getActive().getSheetByName(n); }
+// ===== צוות =====
+// כל איש צוות: { n: שם, h: גיבוב SHA-256 של הסיסמה }. הסיסמה עצמה לא נשמרת בשום מקום.
+function hash_(k) {
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(k), Utilities.Charset.UTF_8));
+}
+function staffList_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty("staff") || "[]"); } catch (e) { return []; }
+}
+function staffSave_(list) { PropertiesService.getScriptProperties().setProperty("staff", JSON.stringify(list)); }
+function staffOf_(k) {
+  if (!k || String(k).length < 8) return null;
+  const h = hash_(k);
+  return staffList_().filter(function (s) { return s.h === h; })[0] || null;
+}
+function isViewer_(k) { return isAdmin_(k) || !!staffOf_(k); }
+function role_(k) { return isAdmin_(k) ? "admin" : "staff"; }
 function isAdmin_(k) {
   return ADMIN_KEY !== "CHANGE_ME" && ADMIN_KEY.length >= 12 && String(k || "") === ADMIN_KEY;
 }
@@ -203,7 +220,7 @@ function doGet(e) {
   if (p.action === "open") return json_({ open: isOpen_() });
 
   if (p.action === "orders") {
-    if (!isAdmin_(p.key)) return json_({ error: "unauthorized" });
+    if (!isViewer_(p.key)) return json_({ error: "unauthorized" });
     const v = sheet_(ORDERS).getDataRange().getValues().slice(1);
     const orders = v.map(function (r, i) {
       const t = r[C.date];
@@ -213,19 +230,24 @@ function doGet(e) {
         time: t instanceof Date ? t.toISOString() : String(t), orderNo: String(r[C.no])
       };
     }).filter(function (o) { return o.orderNo; }).reverse();
-    return json_({ orders: orders, statuses: STATUSES, open: isOpen_() });
+    return json_({ orders: orders, statuses: STATUSES, open: isOpen_(), role: role_(p.key) });
   }
 
   if (p.action === "lists") {
-    if (!isAdmin_(p.key)) return json_({ error: "unauthorized" });
+    if (!isViewer_(p.key)) return json_({ error: "unauthorized" });
     const lists = {};
     Object.keys(LISTS).forEach(function (k) { lists[k] = listItems_(k); });
-    return json_({ lists: lists, recipes: recipeRows_() });
+    return json_({ lists: lists, recipes: recipeRows_(), role: role_(p.key) });
+  }
+
+  if (p.action === "staff") {
+    if (!isAdmin_(p.key)) return json_({ error: "unauthorized" });
+    return json_({ staff: staffList_().map(function (s) { return s.n; }) });
   }
 
   if (p.action === "menuall") {
-    if (!isAdmin_(p.key)) return json_({ error: "unauthorized" });
-    return json_({ menu: menuRows_() });
+    if (!isViewer_(p.key)) return json_({ error: "unauthorized" });
+    return json_({ menu: menuRows_(), role: role_(p.key) });
   }
 
   // תפריט ציבורי (רק מנות פעילות)
@@ -239,8 +261,10 @@ function doPost(e) {
   lock.waitLock(10000);
   try {
     if (d.action) {
-      if (!isAdmin_(d.key)) return text_("unauthorized");
-      return adminOp_(d);
+      if (isAdmin_(d.key)) return adminOp_(d);
+      // צוות: רק שינוי סטטוס של הזמנה, בלי ביטול
+      if (d.action === "setStatus" && staffOf_(d.key)) return staffStatus_(d);
+      return text_("unauthorized");
     }
     return customerOrder_(d);
   } finally {
@@ -267,9 +291,39 @@ function customerOrder_(d) {
   return text_("ok");
 }
 
+// שינוי סטטוס על ידי איש צוות: אסור לבטל הזמנה, ואסור לגעת בהזמנה שכבר בוטלה
+function staffStatus_(d) {
+  if (STATUSES.indexOf(d.status) < 0) return text_("bad status");
+  if (d.status === "בוטלה") return text_("forbidden");
+  const sh = sheet_(ORDERS);
+  const data = sh.getDataRange().getValues();
+  const r = findOrderRow_(data, d.orderNo);
+  if (!r) return text_("not found");
+  if (data[r - 1][C.status] === "בוטלה") return text_("forbidden");
+  sh.getRange(r, C.status + 1).setValue(d.status);
+  return text_("ok");
+}
+
 // פעולות ניהול (דורשות מפתח)
 function adminOp_(d) {
   if (/^list|^recipe/.test(d.action)) return listOp_(d);
+
+  if (d.action === "staffAdd") {
+    const name = clean_(d.name).trim().slice(0, 40), pass = String(d.pass || "");
+    if (!name) return text_("bad name");
+    if (pass.length < 8) return text_("short pass");
+    if (pass === ADMIN_KEY) return text_("same as admin");
+    const list = staffList_(), h = hash_(pass);
+    if (list.some(function (s) { return s.n === name; })) return text_("name exists");
+    if (list.some(function (s) { return s.h === h; })) return text_("pass exists");
+    list.push({ n: name, h: h });
+    staffSave_(list);
+    return text_("ok");
+  }
+  if (d.action === "staffDelete") {
+    staffSave_(staffList_().filter(function (s) { return s.n !== d.name; }));
+    return text_("ok");
+  }
 
   if (d.action === "setStatus") {
     if (STATUSES.indexOf(d.status) < 0) return text_("bad status");

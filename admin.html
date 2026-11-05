@@ -126,6 +126,28 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
 #menu .card.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
+/* משתמש צפייה בלבד */
+.rolebadge{display:inline-block;vertical-align:middle;margin-inline-start:.5rem;background:#2f7de1;color:#fff;font-family:'Heebo',sans-serif;font-weight:800;font-size:.8rem;padding:.2rem .7rem;border-radius:999px}
+.rolebadge[hidden]{display:none}
+body.staff [data-view="menu"],body.staff [data-view="staff"],body.staff #closeDay,body.staff .delbtn,body.staff #addDish,body.staff .msave,body.staff .shopchk,
+body.staff #lists .lform,body.staff #lists .lic,body.staff [data-lclear],body.staff [data-lreset],body.staff [data-addshop],body.staff [data-addprep],body.staff [data-raddrow],body.staff [data-rsave],body.staff [data-rdel]{display:none!important}
+body.staff #lists input,body.staff #lists select,body.staff #lists textarea{pointer-events:none;opacity:.85}
+/* מסך צוות */
+.stf{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid #2f7de1;border-radius:var(--r);padding:1.1rem 1.2rem;margin:.8rem 0;max-width:760px}
+.stf h2{font-size:1.4rem;margin-bottom:.3rem}
+.stf-help{margin:.2rem 0 1rem;opacity:.85;line-height:1.6}
+.stf-add{display:grid;grid-template-columns:1.3fr 1.3fr auto;gap:.6rem;align-items:center;margin-bottom:1rem}
+.stf-pw{display:flex;gap:.4rem}.stf-pw input{flex:1;font-family:ui-monospace,Consolas,monospace}
+.stf-new{background:color-mix(in srgb,#2e9d5b 14%,var(--card));border:1.5px solid #2e9d5b;border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem}
+.stf-new code{font-size:1.15rem;font-weight:800;background:rgba(0,0,0,.12);padding:.15rem .5rem;border-radius:var(--r);user-select:all}
+.stf-note{font-size:.9rem;margin-top:.35rem;opacity:.85}
+.stf-list{list-style:none;margin:0;padding:0}
+.stf-list li{display:flex;align-items:center;justify-content:space-between;padding:.6rem .2rem;border-top:1px solid var(--line);font-weight:700;font-size:1.05rem}
+@media (max-width:640px){.stf-add{grid-template-columns:1fr}}
+.stf .ghost{background:color-mix(in srgb,#2f7de1 16%,var(--card));color:var(--ink);border:1.5px solid #2f7de1;border-radius:var(--r);padding:.5rem .9rem;font-weight:800;opacity:1}
+@media (hover:hover){.stf .ghost:hover{background:color-mix(in srgb,#2f7de1 30%,var(--card))}}
+.stf-pw .ghost{font-size:1.2rem;padding:.35rem .8rem}
+#app:has(#staff:not([hidden])) .shopbar{display:none}
 .msave{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.7rem 1rem;margin:.8rem 0;box-shadow:0 -4px 16px rgba(0,0,0,.18)}
 .msave #saveAll{margin-inline-start:auto;font-size:1.05rem;padding:.7rem 1.6rem}
 .msave #saveAll:disabled{opacity:.45;cursor:default}
@@ -195,7 +217,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </style>
 </head>
 <body>
-<header><h1>ניהול · התאילנדי של ג'וני</h1><nav class="views" id="views" hidden><button class="view on" data-view="orders">הזמנות</button><button class="view" data-view="menu">תפריט</button><button class="view" data-view="lists">רשימות</button></nav><button class="ghost" id="logout" hidden>התנתקות</button></header>
+<header><h1>ניהול · התאילנדי של ג'וני <span class="rolebadge" id="rolebadge" hidden>צוות</span></h1><nav class="views" id="views" hidden><button class="view on" data-view="orders">הזמנות</button><button class="view" data-view="menu">תפריט</button><button class="view" data-view="lists">רשימות</button><button class="view" data-view="staff">צוות</button></nav><button class="ghost" id="logout" hidden>התנתקות</button></header>
 <main>
   <section id="login">
     <h2>כניסה</h2>
@@ -229,6 +251,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div id="orders"></div>
     <div id="menu" hidden></div>
     <div id="lists" hidden></div>
+    <div id="staff" hidden></div>
   </section>
 </main>
 <div id="loader" hidden role="status" aria-label="טוען"><div class="lbox"><div class="spin"></div><span>טוען…</span></div></div>
@@ -239,7 +262,7 @@ const SHEETS_URL="https://script.google.com/macros/s/AKfycbxHnb1rh7o6rO2AN9aVRK-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let lastTab="new";
-let KEY="",STATUSES=[],known=null,tab="new",ORDERS=[],timer=null,audio=null;
+let ROLE="admin",KEY="",STATUSES=[],known=null,tab="new",ORDERS=[],timer=null,audio=null;
 
 try{KEY=localStorage.getItem("jt_admin_key")||""}catch(e){}
 
@@ -252,11 +275,19 @@ async function get(action,silent){if(!silent)busy(1);try{
   return await r.json();
 }finally{if(!silent)busy(-1)}}
 async function post(body,silent){
+  if(ROLE==="staff"&&!(body.action==="setStatus"&&body.status!=="בוטלה")){toast("אין הרשאה – רק המנהל יכול לעשות את זה");return "readonly"}
   if(!silent)busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{if(!silent)busy(-1)}
 }
 function showLogin(msg){
   $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#views").hidden=true;$("#err").textContent=msg||"";
   clearInterval(timer);
+}
+// איש צוות: רואה הזמנות ורשימות, ויכול רק לשנות סטטוס הזמנה (לא לבטל). השרת אוכף את זה בכל מקרה.
+function setRole(r){
+  ROLE=r==="staff"?"staff":"admin";
+  document.body.classList.toggle("staff",ROLE==="staff");
+  $("#rolebadge").hidden=ROLE!=="staff";
+  if(ROLE==="staff"&&(!$("#menu").hidden||!$("#staff").hidden)){const b=document.querySelector('[data-view="orders"]');if(b)b.click()}
 }
 function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").hidden=false;$("#views").hidden=false}
 
@@ -265,6 +296,7 @@ async function loadOrders(initial,silent){
     const d=await get("orders",silent);
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
     if(d.error){showLogin("המפתח שגוי.");return false}
+    setRole(d.role);
     if("open" in d)OPEN=d.open;
     renderShop();
     STATUSES=[...d.statuses];if(!STATUSES.includes("בוטלה"))STATUSES.push("בוטלה");ORDERS=d.orders.map(fixLegacy);applyOverrides();
@@ -280,7 +312,7 @@ function waLink(p){let n=String(p).replace(/\D/g,"");if(n.startsWith("0"))n="972
 // שורות ישנות בגיליון נשמרו בסדר עמודות אחר: [זמן, מס׳ הזמנה, שם, טלפון, מנות, הערה, סכום, סטטוס]
 function fixLegacy(o){if(!/^J\d/.test(String(o.phone))||!STATUSES.includes(String(o.orderNo)))return o;return {...o,legacy:true,time:o.name,orderNo:o.phone,name:o.items,phone:o.note,items:String(o.total),note:o.status,total:o.time,status:o.orderNo}}
 // "הזמנות" = ממתינות לתשלום; "הזמנות מאושרות" = שולם והלאה
-function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר"}[r]||("השמירה נכשלה: "+r)}
+function postErr(r){return {"not found":"ההזמנה לא נמצאה בגיליון","unauthorized":"המפתח לא אושר בשרת","bad status":"סטטוס לא תקין","bad item":"חסר שם או מחיר תקין","bad row":"שורה לא תקינה בגיליון","unknown action":"השרת לא מכיר את הפעולה – יש לעדכן את Code.gs ולפרסם גרסה חדשה","network":"שגיאת חיבור – השינוי לא נשמר","readonly":"אין הרשאה – רק המנהל יכול לעשות את זה","forbidden":"אין הרשאה – רק המנהל יכול לבטל הזמנה","bad name":"חסר שם","short pass":"הסיסמה קצרה מדי (לפחות 8 תווים)","same as admin":"אי אפשר להשתמש בסיסמת המנהל","name exists":"כבר יש איש צוות בשם הזה","pass exists":"הסיסמה הזאת כבר בשימוש – בחרו אחרת"}[r]||("השמירה נכשלה: "+r)}
 // סטטוסים ששונו כאן וטרם אושרו מהגיליון – מוצגים מיד ונשמרים עד שהגיליון מתעדכן
 const OVR={};
 function applyOverrides(){ORDERS.forEach(o=>{const v=OVR[o.orderNo];if(!v)return;if(o.status===v.s)delete OVR[o.orderNo];else if(Date.now()-v.t<90000)o.status=v.s;else{delete OVR[o.orderNo];toast("העדכון של הזמנה "+o.orderNo+" לא נשמר בגיליון")}})}
@@ -300,7 +332,7 @@ function renderOrders(){
       <div class="items">${esc(o.items)}</div>
       ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
       <div class="of"><b><span class="nis">₪</span>${esc(o.total)}</b>
-        <div class="st"><select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}">${STATUSES.filter(s=>s!=="דווח תשלום").map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
+        <div class="st"><select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}"${ROLE==="staff"&&o.status==="בוטלה"?" disabled":""}>${STATUSES.filter(s=>s!=="דווח תשלום"&&!(ROLE==="staff"&&s==="בוטלה"&&o.status!=="בוטלה")).map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
     </div>`).join(""):`<div class="empty">${empty}</div>`;
 }
 
@@ -351,17 +383,17 @@ document.addEventListener("click",async e=>{
     document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x===b));
     document.querySelectorAll(".tab,.tab-only").forEach(t=>t.hidden=other);
     document.querySelectorAll(".menu-only").forEach(t=>t.hidden=v!=="menu");
-    if(other){if(tab!=="menu"&&tab!=="lists")lastTab=tab;tab=v}else{tab=lastTab}
+    if(other){if(!["menu","lists","staff"].includes(tab))lastTab=tab;tab=v}else{tab=lastTab}
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
-    $("#orders").hidden=other;$("#menu").hidden=v!=="menu";$("#lists").hidden=v!=="lists";
-    if(v==="menu")loadMenu();else if(v==="lists")loadLists();else loadOrders();
+    $("#orders").hidden=other;$("#menu").hidden=v!=="menu";$("#lists").hidden=v!=="lists";$("#staff").hidden=v!=="staff";
+    if(v==="menu")loadMenu();else if(v==="lists")loadLists();else if(v==="staff")loadStaff();else loadOrders();
   }
   else if(b.dataset.tab){
     tab=b.dataset.tab;
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===b));
     loadOrders();
   }
-  else if(b.id==="refresh"){tab==="menu"?loadMenu():tab==="lists"?loadLists():loadOrders()}
+  else if(b.id==="refresh"){tab==="menu"?loadMenu():tab==="lists"?loadLists():tab==="staff"?loadStaff():loadOrders()}
   else if(b.id==="addDish"){const ms=document.querySelector("#menu .msave");if(!ms)return;ms.insertAdjacentHTML("beforebegin",menuCard());const c=ms.previousElementSibling;c.scrollIntoView({block:"center"});c.classList.add("dirty");markDirty();c.querySelector("input").focus()}
   else if(b.id==="saveAll"){
     // שומרים את כל המנות ששונו בלחיצה אחת
@@ -430,7 +462,7 @@ $("#shopClosed").onchange=async e=>{
   if(res!=="ok"){toast(postErr(res));renderShop();return}
   OPEN=!close;renderShop();toast(close?"ההזמנות נסגרו":"ההזמנות נפתחו");
 };
-function start(){clearInterval(timer);timer=setInterval(()=>{if(tab!=="menu"&&tab!=="lists"&&!document.hidden)loadOrders(false,true)},30000)}
+function start(){clearInterval(timer);timer=setInterval(()=>{if(!["menu","lists","staff"].includes(tab)&&!document.hidden)loadOrders(false,true)},30000)}
 if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
 </script>
 <script>
@@ -584,6 +616,53 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest("#lists .lform input")){e.preventDefault();e.target.closest(".lform").querySelector("[data-lsave]").click()}});
 document.addEventListener("toggle",e=>{const t=e.target;if(t.classList&&t.classList.contains("rcp")){t.open?OPENR.add(t.dataset.dish):OPENR.delete(t.dataset.dish)}},true);
+</script>
+<script>
+// ===== מסך צוות: ניהול סיסמאות לאנשי צוות (רק למנהל) =====
+let STAFF=[],NEWPASS=null;
+function genPass(){const a="abcdefghjkmnpqrstuvwxyz23456789";const r=crypto.getRandomValues(new Uint32Array(10));return [...r].map(x=>a[x%a.length]).join("")}
+async function loadStaff(){
+  try{
+    const d=await get("staff");
+    if(d.error){$("#staff").innerHTML=`<div class="empty">${d.error==="unauthorized"?"רק המנהל יכול לנהל צוות.":"השרת לא מכיר את המסך הזה – יש לעדכן את Code.gs ולפרסם גרסה חדשה."}</div>`;return}
+    STAFF=d.staff||[];renderStaff();
+  }catch(e){toast("שגיאת חיבור")}
+}
+function renderStaff(){
+  $("#staff").innerHTML=`
+  <div class="stf">
+    <h2>אנשי צוות</h2>
+    <p class="stf-help">איש צוות נכנס לממשק עם הסיסמה שלו. הוא רואה את ההזמנות והרשימות, ויכול לשנות סטטוס של הזמנה (שולם, בהכנה, מוכנה, נמסרה) – אבל לא לבטל, לא למחוק, לא לסגור יום, לא לשנות תפריט ולא לסגור את ההזמנות באתר.</p>
+    ${NEWPASS?`<div class="stf-new"><b>נוצרה סיסמה ל${esc(NEWPASS.n)}:</b> <code dir="ltr">${esc(NEWPASS.p)}</code> <button class="ghost" data-scopy>העתקה</button><div class="stf-note">שמרו או שלחו אותה עכשיו – מטעמי אבטחה היא לא תוצג שוב.</div></div>`:""}
+    <div class="stf-add">
+      <input id="stfName" placeholder="שם איש הצוות" maxlength="40">
+      <div class="stf-pw"><input id="stfPass" dir="ltr" value="${genPass()}" maxlength="64" aria-label="סיסמה"><button class="ghost" data-sgen title="סיסמה חדשה">↻</button></div>
+      <button class="primary" data-sadd>הוספה</button>
+    </div>
+    ${STAFF.length?`<ul class="stf-list">${STAFF.map(n=>`<li><span>${esc(n)}</span><button class="lic del" data-sdel="${esc(n)}" title="הסרה" aria-label="הסרת ${esc(n)}">${TRASH}</button></li>`).join("")}</ul>`:`<div class="empty">עדיין אין אנשי צוות.</div>`}
+  </div>`;
+}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("#staff button");if(!b)return;
+  if(b.hasAttribute("data-sgen")){$("#stfPass").value=genPass();return}
+  if(b.hasAttribute("data-scopy")){try{await navigator.clipboard.writeText(NEWPASS.p);toast("הסיסמה הועתקה")}catch(_){toast("לא הצלחנו להעתיק – סמנו והעתיקו ידנית")}return}
+  if(b.hasAttribute("data-sadd")){
+    const n=$("#stfName").value.trim(),p=$("#stfPass").value.trim();
+    if(!n){toast("חסר שם");$("#stfName").focus();return}
+    if(p.length<8){toast("הסיסמה קצרה מדי (לפחות 8 תווים)");return}
+    const r=await post({action:"staffAdd",name:n,pass:p});
+    if(r!=="ok"){toast(postErr(r));return}
+    NEWPASS={n,p};STAFF.push(n);renderStaff();toast("איש הצוות נוסף");return;
+  }
+  if(b.dataset.sdel){
+    const n=b.dataset.sdel;
+    if(!confirm("להסיר את "+n+"?\nהסיסמה שלו תפסיק לעבוד מיד."))return;
+    const r=await post({action:"staffDelete",name:n});
+    if(r!=="ok"){toast(postErr(r));return}
+    STAFF=STAFF.filter(x=>x!==n);if(NEWPASS&&NEWPASS.n===n)NEWPASS=null;renderStaff();toast("הוסר");
+  }
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest("#staff .stf-add input")){e.preventDefault();document.querySelector("#staff [data-sadd]").click()}});
 </script>
 </body>
 </html>
