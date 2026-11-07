@@ -97,6 +97,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .of select{width:auto;min-width:9rem}
 .st{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .paybadge{font-size:.85rem;font-weight:700;color:#fff;background:#c8102e;padding:.3rem .7rem;border-radius:var(--r)}
+.dupwarn{display:flex;align-items:flex-start;gap:.5rem;margin:.6rem 0 .2rem;padding:.55rem .8rem;border-radius:var(--r);background:color-mix(in srgb,#e8731a 18%,var(--card));border:1.5px solid #e8731a;font-weight:700;font-size:.92rem;line-height:1.45}
+.dupwarn.same{background:color-mix(in srgb,#c8102e 18%,var(--card));border-color:#c8102e}
+.dupwarn b{white-space:nowrap}
+.dupwarn button{background:none;border:0;padding:0;color:var(--gold2);text-decoration:underline;font-weight:800;cursor:pointer}
 .grid2{display:grid;grid-template-columns:repeat(6,1fr);gap:.9rem 1.1rem;margin-bottom:.9rem}
 .f-name{grid-column:span 3}.f-price,.f-cat,.f-act{grid-column:span 1}.f-desc{grid-column:1/-1}.f-img{grid-column:span 3}
 .grid2 input,.grid2 select,.grid2 textarea{padding:.7rem .85rem;font-size:1.02rem}
@@ -400,7 +404,7 @@ async function loadOrders(initial,silent){
     const nos=new Set(ORDERS.map(o=>o.orderNo));
     if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
     known=nos;
-    showApp();renderOrders();return true;
+    showApp();renderOrders();if(initial)warm();return true;
   }catch(e){if(initial)showLogin("שגיאת חיבור. נסו שוב.");else toast("שגיאת חיבור");return false}
 }
 function fmtTime(t){const d=new Date(t);return isNaN(d)?"":d.toLocaleString("he-IL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
@@ -423,9 +427,11 @@ function renderOrders(){
   if(tab==="todo"){$("#orders").innerHTML=todoBox(td);return}
   const list=ORDERS.filter(o=>inTab(o,tab));
   const empty=EMPTY[tab]||"אין הזמנות.";
+  const dups=dupMap();
   $("#orders").innerHTML=(list.length?list.map(o=>`
-    <div class="card" data-s="${esc(o.status)}">
+    <div class="card" data-s="${esc(o.status)}" id="o-${esc(o.orderNo)}">
       <div class="oh"><span>#${esc(o.orderNo)}</span><span class="ohr"><span>${fmtTime(o.time)}</span><button class="delbtn" data-del="${esc(o.orderNo)}" title="מחיקת הזמנה" aria-label="מחיקת הזמנה ${esc(o.orderNo)}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></span></div>
+      ${dupWarn(o,dups)}
       <div class="cust"><span class="cl">פרטי המזמין</span><b>${esc(o.name)}</b><a href="tel:${esc(o.phone)}" dir="ltr">${esc(o.phone)}</a><a class="wa" href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
       <span class="cl">המנות</span>
       <div class="items">${esc(o.items)}</div>
@@ -434,6 +440,23 @@ function renderOrders(){
         <div class="st"><select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}"${ROLE==="staff"&&o.status==="בוטלה"?" disabled":""}>${STATUSES.filter(s=>s!=="דווח תשלום"&&!(ROLE==="staff"&&s==="בוטלה"&&o.status!=="בוטלה")).map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
     </div>`).join("")+sumRow(list):`<div class="empty">${empty}</div>`);
 }
+// הזמנה כפולה: עוד הזמנה (שלא בוטלה) מאותו מספר טלפון. אם גם המנות זהות – כנראה הוזמן פעמיים בטעות.
+const normPh=p=>String(p||"").replace(/\D/g,"").replace(/^972/,"0");
+const normItems=s=>String(s||"").split(/\n|;\s*/).map(l=>l.trim().replace(/\s+/g," ")).filter(Boolean).sort().join("|");
+function dupMap(){const m=new Map();ORDERS.forEach(o=>{if(o.status==="בוטלה")return;const p=normPh(o.phone);if(p.length<9)return;if(!m.has(p))m.set(p,[]);m.get(p).push(o)});return m}
+function dupWarn(o,m){
+  if(o.status==="בוטלה")return "";
+  const others=(m.get(normPh(o.phone))||[]).filter(x=>x.orderNo!==o.orderNo);if(!others.length)return "";
+  const same=others.some(x=>normItems(x.items)===normItems(o.items));
+  const links=others.map(x=>`<button data-goto="${esc(x.orderNo)}">#${esc(x.orderNo)}</button> (${esc(x.status)})`).join(", ");
+  return `<div class="dupwarn${same?" same":""}" role="note">⚠️ <span>${same?"<b>כנראה הזמנה כפולה:</b> אותו טלפון ואותן מנות כמו":"<b>שימו לב:</b> יש עוד הזמנה מאותו טלפון:"} ${links}. כדאי לבדוק מול הלקוח${same?" ולבטל את הכפולה":""}.</span></div>`;
+}
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-goto]");if(!g)return;
+  const go=()=>{const c=document.getElementById("o-"+g.dataset.goto);if(c){c.scrollIntoView({behavior:"smooth",block:"center"});c.animate([{outline:"3px solid #e8731a"},{outline:"3px solid transparent"}],{duration:1800})}};
+  if(!document.getElementById("o-"+g.dataset.goto)){document.querySelector('[data-tab="all"]').click()}
+  setTimeout(go,30);
+});
 // "נותרו להכין": כל המנות בהזמנות שעוד לא מוכנות (חדשה / דווח תשלום / שולם / בהכנה), מתעדכן אוטומטית
 const TODO_ST=["חדשה","דווח תשלום","שולם","בהכנה"];
 function todoData(){
@@ -454,10 +477,16 @@ function sumRow(list){
   return `<div class="osum"><span>סה"כ ${counted.length===1?"הזמנה אחת":counted.length+" הזמנות"}${skip?` <small>(לא כולל ${skip} שבוטלו)</small>`:""}</span><b><span class="nis">₪</span>${sum.toLocaleString("he-IL")}</b></div>`;
 }
 
-async function loadMenu(){
+// אחרי הכניסה: טוענים ברקע את התפריט, הרשימות והצוות, כדי שהמעבר הראשון בין המסכים יהיה מיידי
+let WARMED=false;
+// רענון שקט לא מצייר מחדש מסך שמקלידים בו כרגע (כדי לא למחוק טקסט באמצע הקלדה)
+const busyTyping=sel=>{const a=document.activeElement;return !!(a&&a.closest(sel)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))};
+function warm(){if(WARMED)return;WARMED=true;setTimeout(()=>{if(ROLE==="admin"){if(!$("#menu").innerHTML.trim())loadMenu(true);loadStaff(true)}if(!LDATA)loadLists(true)},400)}
+async function loadMenu(silent){
   try{
-    const d=await get("menuall");
+    const d=await get("menuall",silent);
     if(d.error){showLogin("המפתח שגוי.");return}
+    if(silent&&(busyTyping("#menu")||document.querySelector("#menu .card.dirty")))return;
     const rows=d.menu.map(m=>menuCard(m)).join("");
     $("#menu").innerHTML=rows+'<div class="msave"><span class="mdirty" id="mdirty"></span><button class="primary" id="saveAll" disabled>שמירת כל השינויים</button></div>';
   }catch(e){toast("שגיאת חיבור")}
@@ -507,7 +536,7 @@ document.addEventListener("click",async e=>{
     // מציגים מיד את מה שכבר נטען, ומרעננים ברקע בלי מסך טעינה
     if(v==="menu"){if(!$("#menu").innerHTML.trim())loadMenu()}
     else if(v==="lists"){if(LDATA){renderLists();loadLists(true)}else loadLists()}
-    else if(v==="staff")loadStaff();
+    else if(v==="staff"){if(STAFF_LOADED){renderStaff();loadStaff(true)}else loadStaff()}
     else{renderOrders();loadOrders(false,true)}
   }
   else if(b.dataset.tab){
@@ -628,7 +657,7 @@ async function loadLists(silent){
     LDATA=d.lists;RECIPES=d.recipes||[];
     if(!MENU_NAMES.length){try{const m=await get("menuall",true);MENU_NAMES=(m.menu||[]).map(x=>String(x.name||"")).filter(Boolean)}catch(e){}}
     if(LT==="count")await loadOrders(false,true);
-    renderLists();
+    if(!(silent&&(busyTyping("#lists")||document.querySelector("#lists .rcp.dirty"))))renderLists();
   }catch(e){toast("שגיאת חיבור")}
 }
 function renderLists(){
@@ -772,15 +801,15 @@ document.addEventListener("toggle",e=>{const t=e.target;if(t.classList&&t.classL
 </script>
 <script>
 // ===== מסך צוות: ניהול סיסמאות לאנשי צוות (רק למנהל) =====
-let STAFF=[],NEWPASS=null;const REVEALED={};
+let STAFF=[],NEWPASS=null,STAFF_LOADED=false;const REVEALED={};
 const EYE='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const KEYIC='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M16 7l3 3M18.5 4.5l2 2"/></svg>';
 function genPass(){const a="abcdefghjkmnpqrstuvwxyz23456789";const r=crypto.getRandomValues(new Uint32Array(10));return [...r].map(x=>a[x%a.length]).join("")}
-async function loadStaff(){
+async function loadStaff(silent){
   try{
-    const d=await get("staff");
+    const d=await get("staff",silent);
     if(d.error){$("#staff").innerHTML=`<div class="empty">${d.error==="unauthorized"?"רק המנהל יכול לנהל צוות.":"השרת לא מכיר את המסך הזה – יש לעדכן את Code.gs ולפרסם גרסה חדשה."}</div>`;return}
-    STAFF=d.staff||[];renderStaff();
+    STAFF=d.staff||[];STAFF_LOADED=true;if(!(silent&&busyTyping("#staff")))renderStaff();
   }catch(e){toast("שגיאת חיבור")}
 }
 function staffRow(n){

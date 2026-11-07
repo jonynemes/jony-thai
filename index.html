@@ -307,11 +307,22 @@ function setErr(f,msg){$("#"+f+"Err").textContent=msg;$("#"+f).setAttribute("ari
 ["name","phone"].forEach(f=>{const el=$("#"+f);
   el.addEventListener("blur",()=>{if(el.value.trim())(f==="name"?checkName:checkPhone)()});
   el.addEventListener("input",()=>{if(el.getAttribute("aria-invalid")==="true")setErr(f,"")})});
-function checkout(){
+// מונע הזמנה כפולה בטעות: אם מהמכשיר הזה כבר נשלחה הזמנה מאותו טלפון בשעות האחרונות – שואלים לפני ששולחים שוב
+const LAST_KEY="jt_last_order";
+function recentOrder(phone){try{const l=JSON.parse(localStorage.getItem(LAST_KEY)||"null");if(l&&normPhone(l.phone)===normPhone(phone)&&Date.now()-l.t<4*3600e3)return l}catch(e){}return null}
+function ago(t){const m=Math.max(1,Math.round((Date.now()-t)/60000));return m<60?(m===1?"דקה":m+" דקות"):(Math.round(m/60)===1?"שעה":Math.round(m/60)+" שעות")}
+function checkout(force){
   if(!count())return toast("בחרו לפחות מנה אחת");
   const okN=checkName(),okP=checkPhone();
   if(!okN||!okP){$(okN?"#phone":"#name").focus();return toast("נא לתקן את השדות המסומנים")}
   const name=$("#name").value.trim(),phone=$("#phone").value.trim();
+  const prev=force===true?null:recentOrder(phone);
+  if(prev){
+    showModal(`<h3>כבר שלחת הזמנה</h3><p>לפני ${ago(prev.t)} נשלחה הזמנה ${esc(prev.no)} מהטלפון הזה (${esc(prev.items)}).<br>אם כבר שילמת עליה – אין צורך להזמין שוב.</p>
+      <div class="actions"><button class="ghost" id="dupNo">ביטול</button><button class="primary" id="dupYes">כן, זו הזמנה נוספת</button></div>`);
+    $("#dupNo").onclick=hideModal;$("#dupYes").onclick=()=>{hideModal();checkout(true)};$("#dupNo").focus();
+    return;
+  }
   orderNo=makeNo();const t=total();
   $("#summary").innerHTML=`<div class="row"><span>שם</span><b>${esc(name)}</b></div><div class="row"><span>טלפון</span><b>${esc(phone)}</b></div>`+
     lines().map(l=>`<div class="row"><span>${l.qty} × ${l.name}${l.note?`<br><small>${esc(l.note)}</small>`:""}</span><b>${money(l.qty*l.price)}</b></div>`).join("")+
@@ -321,7 +332,8 @@ function checkout(){
   $("#payPhoneTxt").textContent=CONFIG.PAY_PHONE.replace(/\D/g,"").replace(/^(\d{3})(\d{3})(\d{4})$/,"$1-$2-$3");
   $("#status").textContent="";
   go("checkout");
-  send("חדשה"); // רושם את ההזמנה בטבלה מיד עם סיום ההזמנה
+  const summaryTxt=lines().map(l=>l.qty+"× "+l.name).join(", ").slice(0,120);
+  send("חדשה").then(ok=>{if(ok)try{localStorage.setItem(LAST_KEY,JSON.stringify({phone,no:orderNo,t:Date.now(),items:summaryTxt}))}catch(e){}}); // רושם את ההזמנה בטבלה מיד עם סיום ההזמנה
 }
 async function send(status){
   if(USE_FB)return sendFB(status);
