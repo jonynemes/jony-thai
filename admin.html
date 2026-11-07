@@ -127,7 +127,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopbar.closed .shopst::before{background:#c8102e}
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
-#menu .card.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
+#menu .card.dirty,#lists .rcp.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
 .osum{position:sticky;bottom:12px;z-index:3;opacity:.9;box-shadow:0 6px 22px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:space-between;gap:1rem;background:color-mix(in srgb,var(--gold) 14%,var(--card));border:1.5px solid var(--gold);border-radius:var(--r);padding:.9rem 1.1rem;margin:.8rem 0 1.4rem;font-weight:800;font-size:1.15rem}
 .osum b{font-size:1.45rem;color:var(--saffron)}.osum small{font-weight:600;opacity:.75;font-size:.9rem}
 /* משתמש צפייה בלבד */
@@ -168,8 +168,8 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
 .abtns{display:flex;gap:.6rem;justify-content:flex-end;margin-top:.4rem}
 .abox .ghost{background:color-mix(in srgb,#2f7de1 16%,var(--card));color:var(--ink);border:1.5px solid #2f7de1;border-radius:var(--r);padding:.5rem 1rem;font-weight:800}
 .msave{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.7rem 1rem;margin:.8rem 0;box-shadow:0 -4px 16px rgba(0,0,0,.18)}
-.msave #saveAll{margin-inline-start:auto;font-size:1.05rem;padding:.7rem 1.6rem}
-.msave #saveAll:disabled{opacity:.45;cursor:default}
+.msave #saveAll,.msave #rSaveAll{margin-inline-start:auto;font-size:1.05rem;padding:.7rem 1.6rem}
+.msave #saveAll:disabled,.msave #rSaveAll:disabled{opacity:.45;cursor:default}
 .mdirty{font-weight:700;color:var(--saffron)}
 .adddish{background:#2e9d5b;color:#fff;font-size:1.02rem;padding:.6rem 1.4rem;box-shadow:0 2px 8px rgba(46,157,91,.3)}
 .adddish:hover{background:#27874e}
@@ -222,6 +222,12 @@ body.staff #lists input,body.staff #lists select,body.staff #lists textarea{poin
 .ltbl{width:100%;border-collapse:collapse}
 .ltbl td{padding:.55rem .3rem;border-bottom:1px solid var(--line);font-weight:600}
 .ltbl tr:last-child td{border-bottom:0}
+.ltbl th{font-size:.8rem;font-weight:700;opacity:.65;text-align:center;padding:.2rem .3rem .45rem;border-bottom:1px solid var(--line);white-space:nowrap}
+.ltbl th:first-child{text-align:start}.ltbl th:last-child{text-align:left}
+.ltbl .sub{text-align:center;font-weight:700;opacity:.75;white-space:nowrap;width:4.5rem}
+.ltbl .rdy{color:#2e9d5b;opacity:1}
+.ltbl tr.alldone td:first-child{opacity:.55;text-decoration:line-through}
+.ltbl tr.alldone .num{color:#2e9d5b}
 .ltbl tfoot td{border-top:2px solid var(--gold);border-bottom:0;font-weight:800;padding-top:.65rem}
 .ltbl .num{text-align:left;font-weight:800;font-size:1.15rem;color:var(--saffron);white-space:nowrap}
 .lwarn{color:#e5484d;font-weight:600;margin:.7rem 0 0}
@@ -282,7 +288,7 @@ html,body{overflow-x:clip}
   .ltabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
   .ltab{grid-column:span 2;min-width:0;white-space:nowrap;padding-inline:.3rem}
   .ltab:nth-child(n+4){grid-column:span 3}
-  .msave #saveAll{flex:1;margin-inline-start:0}
+  .msave #saveAll,.msave #rSaveAll{flex:1;margin-inline-start:0}
   input,select,textarea{font-size:16px} /* מונע זום אוטומטי באייפון בזמן הקלדה */
 }
 </style>
@@ -551,6 +557,7 @@ const PRI_ORDER={"דחוף":0,"רגיל":1,"יכול לחכות":2};
 const UNITS=["גרם","ק״ג","מ״ל","ליטר","יחידה","כף","כפית","פחית","חבילה","צרור"];
 const TRASH='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
 const OPEN_ST={open:["חדשה","דווח תשלום","שולם","בהכנה"],paid:["שולם","בהכנה"]};
+const READY_ST=["מוכנה","נמסרה"];
 let LT="shop",LDATA=null,RECIPES=[],MENU_NAMES=[],EDIT=null,CNT_SCOPE="open";
 const OPENR=new Set();
 
@@ -615,6 +622,11 @@ function countData(){
   const ings=new Map(),missing=[];
   dishes.forEach((d,name)=>{const rs=RECIPES.filter(r=>r.dish===name);if(!rs.length){missing.push(name);return}
     rs.forEach(r=>{const key=r.ing+"|"+(r.unit||"");const x=ings.get(key)||{ing:r.ing,unit:r.unit||"",q:0};x.q+=r.qty*d.q;ings.set(key,x)})});
+  // מנות שכבר הוכנו (הזמנות מוכנות / נמסרו) – כדי להראות כמה נותר
+  const ready=new Map();
+  ORDERS.filter(o=>READY_ST.includes(o.status)).forEach(o=>parseItems(o.items).forEach(it=>ready.set(it.name,(ready.get(it.name)||0)+it.q)));
+  ready.forEach((q,name)=>{if(!dishes.has(name))dishes.set(name,{q:0,notes:[]})});
+  dishes.forEach((d,name)=>d.ready=ready.get(name)||0);
   return {orders,dishes:[...dishes].sort((a,b)=>b[1].q-a[1].q),ings:[...ings.values()].sort((a,b)=>String(a.ing).localeCompare(b.ing,"he")),missing};
 }
 function countView(){
@@ -622,7 +634,7 @@ function countView(){
   const scope=`<div class="lscope"><span>לפי הזמנות:</span><button class="chip${CNT_SCOPE==="open"?" on":""}" data-scope="open">כל הפתוחות</button><button class="chip${CNT_SCOPE==="paid"?" on":""}" data-scope="paid">רק שולמו ובהכנה</button></div>`;
   if(!c.dishes.length)return scope+`<div class="lcard"><div class="empty">אין הזמנות פתוחות כרגע.</div></div>`;
   return scope+`<div class="lcard"><h3 class="lh">כמה מנות להכין <small>${c.orders.length} הזמנות</small></h3>
-    <table class="ltbl"><tbody>${c.dishes.map(([n,d])=>`<tr><td>${esc(n)}${d.notes.length?`<div class="lnote">${esc(d.notes.join(" · "))}</div>`:""}</td><td class="num">${d.q}</td></tr>`).join("")}</tbody><tfoot><tr><td>סה״כ מנות</td><td class="num">${c.dishes.reduce((s,[,d])=>s+(+d.q||0),0)}</td></tr></tfoot></table>
+    <table class="ltbl lcnt3"><thead><tr><th>מנה</th><th>סה״כ</th><th>מוכנות</th><th>נותרו להכין</th></tr></thead><tbody>${c.dishes.map(([n,d])=>`<tr${d.q?"":' class="alldone"'}><td>${esc(n)}${d.notes.length?`<div class="lnote">${esc(d.notes.join(" · "))}</div>`:""}</td><td class="sub">${d.q+d.ready}</td><td class="sub rdy">${d.ready}</td><td class="num">${d.q||"✓"}</td></tr>`).join("")}</tbody><tfoot><tr><td>סה״כ מנות</td><td class="sub">${c.dishes.reduce((s,[,d])=>s+d.q+d.ready,0)}</td><td class="sub rdy">${c.dishes.reduce((s,[,d])=>s+d.ready,0)}</td><td class="num">${c.dishes.reduce((s,[,d])=>s+d.q,0)}</td></tr></tfoot></table>
     <div class="lact"><button class="ghost" data-addprep>הוספה לרשימת ההכנות</button></div></div>
     <div class="lcard"><h3 class="lh">מצרכים שצריך</h3>
     ${c.ings.length?`<table class="ltbl"><tbody>${c.ings.map(x=>`<tr><td>${esc(x.ing)}</td><td class="num">${fmtQ(x.q)} ${esc(x.unit)}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">עדיין אין מתכונים למנות האלה.</div>`}
@@ -638,13 +650,13 @@ function recipesView(){
     return `<details class="lcard rcp" data-dish="${esc(d)}"${OPENR.has(d)?" open":""}><summary><b>${esc(d)}</b><span class="rcnt${rs.length?"":" none"}">${rs.length?rs.length+" מצרכים":"אין מתכון"}</span></summary>
       <div class="rhead"><span>מצרך</span><span>כמות למנה</span><span>יחידה</span><span></span></div>
       <div class="rrows">${(rs.length?rs:[{ing:"",qty:"",unit:""}]).map(rRow).join("")}</div>
-      <div class="lact"><button class="ghost" data-raddrow>+ מצרך</button><button class="primary" data-rsave>שמירת המתכון</button></div></details>`}).join("");
+      <div class="lact"><button class="ghost" data-raddrow>+ מצרך</button></div></details>`}).join("")+`<div class="msave rsave"><span class="mdirty" id="rdirty"></span><button class="primary" id="rSaveAll" data-rsaveall disabled>שמירת כל השינויים</button></div>`;
 }
 
 document.addEventListener("click",async e=>{
   const b=e.target.closest("#lists button");if(!b)return;
   const d=b.dataset;
-  if(d.lt){LT=d.lt;EDIT=null;if(LT==="count")await loadOrders(false,true);renderLists();return}
+  if(d.lt){if(document.querySelector("#lists .rcp.dirty")&&!confirm("יש שינויים במתכונים שלא נשמרו. לעבור בכל זאת?"))return;LT=d.lt;EDIT=null;if(LT==="count")await loadOrders(false,true);renderLists();return}
   if(d.scope){CNT_SCOPE=d.scope;renderLists();return}
   if(d.lsave!==undefined){
     const f=b.closest(".lform"),it={id:f.dataset.id||""};
@@ -669,20 +681,22 @@ document.addEventListener("click",async e=>{
   if(d.addprep!==undefined||d.addshop!==undefined){
     const c=countData(),shop=d.addshop!==undefined;
     const items=shop?c.ings.map(x=>({text:x.ing,qty:(fmtQ(x.q)+" "+x.unit).trim(),group:"לפי הזמנות",pri:"רגיל"}))
-                    :c.dishes.map(([n,x])=>({text:n,qty:String(x.q),group:"לפי הזמנות",note:x.notes.join(" · "),pri:"רגיל"}));
+                    :c.dishes.filter(([,x])=>x.q>0).map(([n,x])=>({text:n,qty:String(x.q),group:"לפי הזמנות",note:x.notes.join(" · "),pri:"רגיל"}));
     if(!items.length)return;
     const res=await post({action:"listAdd",list:shop?"shop":"prep",items});
     if(res!=="ok"){toast(postErr(res));return}
     toast(shop?"נוסף לרשימת הקניות":"נוסף לרשימת ההכנות");await loadLists(true);return}
   if(d.raddrow!==undefined){const c=b.closest(".rcp");c.querySelector(".rrows").insertAdjacentHTML("beforeend",rRow({ing:"",qty:"",unit:""}));c.querySelector(".rrow:last-child input").focus();return}
-  if(d.rdel!==undefined){b.closest(".rrow").remove();return}
-  if(d.rsave!==undefined){
-    const c=b.closest(".rcp"),dish=c.dataset.dish;
-    const rows=[...c.querySelectorAll(".rrow")].map(r=>({ing:r.querySelector('[data-r="ing"]').value.trim(),qty:r.querySelector('[data-r="qty"]').value,unit:r.querySelector('[data-r="unit"]').value.trim()})).filter(r=>r.ing);
-    if(rows.some(r=>!(Number(r.qty)>0))){toast("חסרה כמות לאחד המצרכים");return}
-    const res=await post({action:"recipeSave",dish,rows});
-    if(res!=="ok"){toast(postErr(res));return}
-    OPENR.add(dish);toast("המתכון נשמר");await loadLists();return}
+  if(d.rdel!==undefined){const c=b.closest(".rcp");b.closest(".rrow").remove();c.classList.add("dirty");rMarkDirty();return}
+  if(d.rsaveall!==undefined){
+    const cards=[...document.querySelectorAll("#lists .rcp.dirty")];if(!cards.length)return;
+    const jobs=cards.map(c=>({c,dish:c.dataset.dish,rows:[...c.querySelectorAll(".rrow")].map(r=>({ing:r.querySelector('[data-r="ing"]').value.trim(),qty:r.querySelector('[data-r="qty"]').value,unit:r.querySelector('[data-r="unit"]').value.trim()})).filter(r=>r.ing)}));
+    const bad=jobs.find(j=>j.rows.some(r=>!(Number(r.qty)>0)));
+    if(bad){bad.c.open=true;bad.c.scrollIntoView({block:"center"});toast("חסרה כמות לאחד המצרכים ב"+bad.dish);return}
+    b.disabled=true;b.textContent="שומר...";let ok=0;
+    for(const j of jobs){const res=await post({action:"recipeSave",dish:j.dish,rows:j.rows},true);if(res!=="ok"){toast(postErr(res));break}ok++;OPENR.add(j.dish);j.c.classList.remove("dirty")}
+    if(ok===jobs.length){toast(ok===1?"המתכון נשמר":ok+" מתכונים נשמרו");await loadLists()}else{b.textContent="שמירת כל השינויים";rMarkDirty()}
+    return}
 });
 document.addEventListener("change",async e=>{
   const c=e.target.closest("#lists [data-done]");if(!c)return;
@@ -692,6 +706,9 @@ document.addEventListener("change",async e=>{
   if(res!=="ok"){it.done=!it.done;renderLists();toast(postErr(res))}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest("#lists .lform input")){e.preventDefault();e.target.closest(".lform").querySelector("[data-lsave]").click()}});
+function rMarkDirty(){const n=document.querySelectorAll("#lists .rcp.dirty").length,s=$("#rSaveAll");if(!s)return;s.disabled=!n;$("#rdirty").textContent=n?(n===1?"מתכון אחד עודכן":n+" מתכונים עודכנו"):""}
+document.addEventListener("input",e=>{const c=e.target.closest("#lists .rcp");if(c){c.classList.add("dirty");rMarkDirty()}});
+addEventListener("beforeunload",e=>{if(document.querySelector("#lists:not([hidden]) .rcp.dirty")){e.preventDefault();e.returnValue=""}});
 document.addEventListener("toggle",e=>{const t=e.target;if(t.classList&&t.classList.contains("rcp")){t.open?OPENR.add(t.dataset.dish):OPENR.delete(t.dataset.dish)}},true);
 </script>
 <script>
