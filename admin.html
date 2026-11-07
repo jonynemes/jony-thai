@@ -128,6 +128,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopchk{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem;cursor:pointer}
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
 #menu .card.dirty,#lists .rcp.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
+.todo{background:color-mix(in srgb,var(--saffron) 12%,var(--card));border:1.5px solid var(--saffron);border-radius:var(--r);padding:.6rem .9rem;margin:.2rem 0 .9rem}
+.todo summary{display:flex;align-items:baseline;gap:.45rem;cursor:pointer;font-weight:800;font-size:1.05rem;list-style:none}
+.todo summary::-webkit-details-marker{display:none}
+.todo summary::after{content:"▾";margin-inline-start:auto;opacity:.6;transition:transform .2s}
+.todo:not([open]) summary::after{transform:rotate(90deg)}
+.todo summary b{font-size:1.7rem;color:var(--saffron);line-height:1}
+.todo ul{list-style:none;margin:.55rem 0 .1rem;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.4rem}
+.todo li{display:flex;justify-content:space-between;align-items:center;gap:.6rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.4rem .7rem;font-weight:600}
+.todo li b{font-size:1.2rem;color:var(--saffron)}
+.todo.done{border-color:#2e9d5b;background:color-mix(in srgb,#2e9d5b 12%,var(--card));color:#7fd6a0}
 .osum{position:sticky;bottom:12px;z-index:3;opacity:.9;box-shadow:0 6px 22px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:space-between;gap:1rem;background:color-mix(in srgb,var(--gold) 14%,var(--card));border:1.5px solid var(--gold);border-radius:var(--r);padding:.9rem 1.1rem;margin:.8rem 0 1.4rem;font-weight:800;font-size:1.15rem}
 .osum b{font-size:1.45rem;color:var(--saffron)}.osum small{font-weight:600;opacity:.75;font-size:.9rem}
 /* משתמש צפייה בלבד */
@@ -401,7 +411,7 @@ function renderOrders(){
   document.querySelectorAll("[data-cnt]").forEach(s=>{const t=s.dataset.cnt,n=ORDERS.filter(o=>inTab(o,t)).length;s.textContent=n?"("+n+")":""});
   const list=ORDERS.filter(o=>inTab(o,tab));
   const empty=EMPTY[tab]||"אין הזמנות.";
-  $("#orders").innerHTML=list.length?list.map(o=>`
+  $("#orders").innerHTML=todoBox()+(list.length?list.map(o=>`
     <div class="card" data-s="${esc(o.status)}">
       <div class="oh"><span>#${esc(o.orderNo)}</span><span class="ohr"><span>${fmtTime(o.time)}</span><button class="delbtn" data-del="${esc(o.orderNo)}" title="מחיקת הזמנה" aria-label="מחיקת הזמנה ${esc(o.orderNo)}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></span></div>
       <div class="cust"><span class="cl">פרטי המזמין</span><b>${esc(o.name)}</b><a href="tel:${esc(o.phone)}" dir="ltr">${esc(o.phone)}</a><a class="wa" href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
@@ -410,8 +420,21 @@ function renderOrders(){
       ${o.note?`<div class="onote">הערה: ${esc(o.note)}</div>`:""}
       <div class="of"><b><span class="nis">₪</span>${esc(o.total)}</b>
         <div class="st"><select data-no="${esc(o.orderNo)}" aria-label="סטטוס הזמנה ${esc(o.orderNo)}"${ROLE==="staff"&&o.status==="בוטלה"?" disabled":""}>${STATUSES.filter(s=>s!=="דווח תשלום"&&!(ROLE==="staff"&&s==="בוטלה"&&o.status!=="בוטלה")).map(s=>`<option${s===(o.status==="דווח תשלום"?"חדשה":o.status)?" selected":""}>${s}</option>`).join("")}</select>${o.status==="דווח תשלום"?`<span class="paybadge">הלקוח דיווח על תשלום – יש לבדוק</span>`:""}</div></div>
-    </div>`).join("")+sumRow(list):`<div class="empty">${empty}</div>`;
+    </div>`).join("")+sumRow(list):`<div class="empty">${empty}</div>`);
 }
+// "נותרו להכין": כל המנות בהזמנות שעוד לא מוכנות (חדשה / דווח תשלום / שולם / בהכנה), מתעדכן אוטומטית
+const TODO_ST=["חדשה","דווח תשלום","שולם","בהכנה"];
+let TODO_OPEN=true;try{TODO_OPEN=localStorage.getItem("jt_todo")!=="0"}catch(e){}
+function todoBox(){
+  if(typeof parseItems!=="function")return "";
+  const m=new Map();
+  ORDERS.filter(o=>TODO_ST.includes(o.status)).forEach(o=>parseItems(o.items).forEach(it=>m.set(it.name,(m.get(it.name)||0)+it.q)));
+  const arr=[...m].sort((a,b)=>b[1]-a[1]),total=arr.reduce((s,[,q])=>s+q,0);
+  if(!total)return `<div class="todo done"><b>אין מנות שנותרו להכין</b> ✓</div>`;
+  return `<details class="todo"${TODO_OPEN?" open":""}><summary><span>נותרו להכין</span><b>${total}</b><span>${total===1?"מנה":"מנות"}</span></summary>
+    <ul>${arr.map(([n,q])=>`<li><span>${esc(n)}</span><b>${q}</b></li>`).join("")}</ul></details>`;
+}
+document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("todo")){TODO_OPEN=e.target.open;try{localStorage.setItem("jt_todo",TODO_OPEN?"1":"0")}catch(_){}}},true);
 // שורת סיכום בתחתית: סה"כ סכום ההזמנות שמוצגות בסינון הנוכחי (בלי הזמנות שבוטלו, חוץ מבסינון "בוטלה")
 function sumRow(list){
   const counted=tab==="cancel"?list:list.filter(o=>o.status!=="בוטלה");
