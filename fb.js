@@ -193,6 +193,12 @@ async function post(body) {
       case "staffChange": return await staffChange(d.name, d.pass);
       case "staffDelete": return await staffDelete(d.name);
       case "importSheets": return await importSheets(d.url, d.oldKey);
+      case "imageAdd": {
+        if (!/^data:image\/(webp|jpeg|png);base64,/.test(d.data || "") || d.data.length > 900000) return "bad image";
+        const r = await addDoc(collection(db, "images"), { name: clean(d.name).slice(0, 80), data: d.data, thumb: String(d.thumb || "").slice(0, 60000), created: Date.now() });
+        return "ok:" + r.id;
+      }
+      case "imageDelete": await deleteDoc(doc(db, "images", String(d.id))); return "ok";
     }
     return "unknown action";
   } catch (e) { console.error(e); return errCode(e); }

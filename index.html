@@ -172,6 +172,21 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
 .modal.on{display:flex}
 .modal .card{background:var(--card);color:var(--ink);border:2px solid var(--gold);border-radius:var(--r);padding:1.7rem;max-width:380px;width:100%;text-align:center}
 .modal .card h3{font-size:1.7rem;color:var(--head);margin-bottom:.5rem}
+.dish{cursor:pointer}
+.modal .card.dishm{max-width:420px;padding:0;overflow:hidden;text-align:start;max-height:92vh;overflow-y:auto}
+.dm-img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--line);border-bottom:2px solid var(--gold)}
+.dm-body{padding:1.2rem 1.4rem 1.4rem}
+.dishm h3{font-size:1.55rem;margin:0 0 .35rem}
+.dm-desc{margin:0 0 .6rem;opacity:.78;line-height:1.55}
+.dm-price{font-family:"Suez One",serif;color:var(--price);font-size:1.6rem;margin-bottom:.8rem}
+.dm-qty{display:flex;align-items:center;justify-content:center;gap:1.2rem;margin:.2rem 0 .9rem}
+.dm-qty .qb{width:2.6rem;height:2.6rem;font-size:1.4rem}
+.dm-qty .dm-plus{background:var(--saffron);border-color:var(--saffron);color:#fff}
+#dmQ{min-width:2rem;text-align:center;font-weight:700;font-size:1.4rem}
+.dm-note{width:100%;margin-bottom:1rem}
+.dm-acts{display:flex;gap:.6rem}
+.dm-acts .primary{flex:1}
+.dm-acts .dm-remove{background:var(--chili)}
 .spin{width:2.6rem;height:2.6rem;border:4px solid var(--line);border-top-color:var(--saffron);border-radius:50%;margin:.4rem auto 1rem;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.5s}}
@@ -259,7 +274,48 @@ const count = ()=>Object.values(cart).reduce((s,c)=>s+c.q,0);
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function showModal(h){$("#modalCard").innerHTML=h;$("#modal").classList.add("on")}
-function hideModal(){$("#modal").classList.remove("on")}
+function hideModal(){$("#modal").classList.remove("on");$("#modalCard").classList.remove("dishm")}
+// ===== חלון פרטי מנה: לחיצה על מנה בתפריט פותחת תמונה גדולה, תיאור, כמות והערה =====
+let DM=null; // {id,q}
+function openDish(id){
+  const i=ALL.find(x=>x.id===id);if(!i)return;
+  const inCart=cart[id]?cart[id].q:0;DM={id,q:inCart||1,had:inCart};
+  const cardImg=document.querySelector("#d-"+id+" img"),src=cardImg&&cardImg.src&&cardImg.complete&&cardImg.naturalWidth?cardImg.src:(i.img&&!String(i.img).startsWith("fbimg:")?i.img:"");
+  showModal(`${src?`<img class="dm-img" src="${esc(src)}" alt="${esc(i.n)}">`:""}
+    <div class="dm-body"><h3>${esc(i.n)}</h3>${i.d?`<p class="dm-desc">${esc(i.d)}</p>`:""}
+    <div class="dm-price"><span class="nis">₪</span>${i.p}</div>
+    <div class="dm-qty"><button class="qb" data-dmq="-1" aria-label="הפחת">−</button><span id="dmQ">${DM.q}</span><button class="qb dm-plus" data-dmq="1" aria-label="הוסף">+</button></div>
+    <input class="dm-note" id="dmNote" placeholder="הערה למנה: חריפות, בלי בוטנים..." value="${esc(NOTES[id]||"")}">
+    <div class="dm-acts"><button class="ghost" data-dmclose>סגירה</button><button class="primary" id="dmAdd"></button></div></div>`);
+  $("#modalCard").classList.add("dishm");dmLabel();
+}
+function dmLabel(){
+  const i=ALL.find(x=>x.id===DM.id),b=$("#dmAdd");$("#dmQ").textContent=DM.q;
+  b.textContent=DM.q===0?"הסרה מההזמנה":(DM.had?"עדכון":"הוספה להזמנה")+" · "+money(DM.q*i.p);
+  b.classList.toggle("dm-remove",DM.q===0);
+}
+function dmApply(){
+  const id=DM.id,note=$("#dmNote").value.trim(),cur=cart[id]?cart[id].q:0;
+  NOTES[id]=note;if(cart[id])cart[id].note=note;
+  change(id,DM.q-cur);if(cart[id])cart[id].note=note;
+  // מסנכרנים את ההערה גם בכרטיס המנה
+  const ni=document.querySelector(`[data-note="${id}"]`);if(ni)ni.value=note;
+  const nb=document.querySelector(`[data-nb="${id}"]`);if(nb&&!$("#d-"+id).classList.contains("noteon"))nb.textContent=note?"✎ עריכת הערה":"+ הוסף הערה למנה";
+  hideModal();DM=null;toast(cart[id]?"עודכן בהזמנה":"הוסר מההזמנה");
+}
+document.addEventListener("click",e=>{
+  if(DM&&$("#modalCard").classList.contains("dishm")){
+    if(e.target.id==="modal"||e.target.closest("[data-dmclose]")){hideModal();DM=null;return}
+    const q=e.target.closest("[data-dmq]");if(q){DM.q=Math.max(DM.had?0:1,Math.min(50,DM.q+Number(q.dataset.dmq)));dmLabel();return}
+    if(e.target.closest("#dmAdd")){dmApply();return}
+    return;
+  }
+  const d=e.target.closest(".dish");
+  if(!d||e.target.closest("button,input,textarea,a"))return;
+  if(CLOSED)return closedMsg();
+  openDish(d.id.slice(2));
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&DM){hideModal();DM=null}if(e.key==="Enter"&&DM&&e.target.id==="dmNote")dmApply()});
 function loading(t){showModal(`<div class="spin"></div><p>${t}</p>`)}
 function done(title,msg){showModal(`<h3>${title}</h3><p>${msg}</p><button class="primary" id="okBtn">סגירה</button>`);$("#okBtn").onclick=hideModal;$("#okBtn").focus()}
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1800)}
@@ -269,11 +325,20 @@ function go(v){document.querySelectorAll(".view").forEach(e=>e.classList.toggle(
 
 function renderMenu(){
   $("#menu").innerHTML=`<div class="menucard"><h2 class="menutitle">המנות שלנו</h2>`+MENU.map(c=>`${c.cat?`<h3 class="cat">${c.cat}</h3>`:""}<div class="grid">`+c.items.map(i=>`
-    <div class="dish" id="d-${i.id}">${i.img?`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`:""}<div class="top"><span>${i.n}</span><span class="lead"></span><span class="price"><span class="nis">₪</span>${i.p}</span></div>
+    <div class="dish" id="d-${i.id}">${i.img?(String(i.img).startsWith("fbimg:")?`<img data-fbimg="${esc(String(i.img).slice(6))}" alt="${esc(i.n)}">`:`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`):""}<div class="top"><span>${i.n}</span><span class="lead"></span><span class="price"><span class="nis">₪</span>${i.p}</span></div>
     <small>${i.d}</small>
     <div class="qty"><button class="qb" data-m="${i.id}" aria-label="הפחת">−</button><span class="qn" id="q-${i.id}">0</span><button class="qb" data-p="${i.id}" aria-label="הוסף">+</button></div>
     <button class="notebtn" type="button" data-nb="${i.id}">+ הוסף הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
-  updateBar();applyClosed();
+  updateBar();applyClosed();loadFbImages();
+}
+// תמונות שהועלו מממשק הניהול נשמרות ב-Firebase. נטענות פעם אחת ונשמרות בטלפון – בביקור הבא מוצגות מיד.
+function loadFbImages(){
+  document.querySelectorAll("img[data-fbimg]").forEach(async im=>{
+    const id=im.dataset.fbimg,k="jt_img_"+id;
+    let src=null;try{src=localStorage.getItem(k)}catch(e){}
+    if(!src){try{const r=await fetch(FS+"/images/"+encodeURIComponent(id)+"?mask.fieldPaths=data&key="+FS_KEY);if(r.ok){src=fsRow(await r.json()).data;try{localStorage.setItem(k,src)}catch(e){}}}catch(e){}}
+    if(src)im.src=src;else im.remove();
+  });
 }
 function updateBar(){const n=count(),b=$("#bar");if(!b)return;b.classList.toggle("empty",!n);$("#barTxt").textContent=n?n+" מנות · "+money(total()):""}
 function change(id,delta){

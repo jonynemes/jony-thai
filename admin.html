@@ -101,6 +101,27 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .dupwarn.same{background:color-mix(in srgb,#c8102e 18%,var(--card));border-color:#c8102e}
 .dupwarn b{white-space:nowrap}
 .dupwarn button{background:none;border:0;padding:0;color:var(--gold2);text-decoration:underline;font-weight:800;cursor:pointer}
+.imgpick{display:flex;align-items:center;gap:.7rem;flex-wrap:nowrap}
+.imgprev{width:64px;height:64px;border-radius:var(--r);background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-size:.7rem;opacity:.9;text-align:center;flex:none}
+.imgprev img{width:100%;height:100%;object-fit:cover}
+.imgname{flex:0 1 auto;min-width:0;max-width:220px;font-size:.85rem;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.imgpick [data-pickimg]{flex:none;display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .95rem;border:2px solid var(--gold);color:var(--gold2);background:color-mix(in srgb,var(--gold) 10%,transparent);border-radius:var(--r);font-weight:800}
+@media (hover:hover){.imgpick [data-pickimg]:hover{background:color-mix(in srgb,var(--gold) 22%,transparent)}}
+.imgpick [data-noimg]{flex:none;width:2.5rem;height:2.5rem;opacity:.95}
+.imgpick [data-noimg] svg{width:22px;height:22px}
+.ipick{width:min(760px,100%);max-height:88vh;display:flex;flex-direction:column}
+.iup{display:block;cursor:pointer;margin:.2rem 0 .8rem}
+.iup span{display:block;text-align:center;padding:.75rem;border:2px dashed var(--gold);border-radius:var(--r);font-weight:800;color:var(--gold2)}
+.iup:hover span{background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.ihint{font-size:.85rem}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem;overflow:auto;padding:.2rem;margin-bottom:.6rem}
+.icell{position:relative}
+.ipic{display:flex;flex-direction:column;width:100%;padding:0;background:var(--bg);border:2px solid var(--line);border-radius:var(--r);overflow:hidden;color:var(--ink);font-weight:600}
+.ipic img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#000}
+.ipic span{font-size:.75rem;padding:.3rem .4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr}
+.ipic:hover,.icell.on .ipic{border-color:var(--saffron)}
+.idel{position:absolute;top:4px;left:4px;width:26px;height:26px;padding:0;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:1.1rem;line-height:1}
+.idel:hover{background:#c8102e}
 .grid2{display:grid;grid-template-columns:repeat(6,1fr);gap:.9rem 1.1rem;margin-bottom:.9rem}
 .f-name{grid-column:span 3}.f-price,.f-cat,.f-act{grid-column:span 1}.f-desc{grid-column:1/-1}.f-img{grid-column:span 3}
 .grid2 input,.grid2 select,.grid2 textarea{padding:.7rem .85rem;font-size:1.02rem}
@@ -307,6 +328,7 @@ html,body{overflow-x:clip}
   .ltab{grid-column:span 2;min-width:0;white-space:nowrap;padding-inline:.3rem}
   .ltab:nth-child(n+4){grid-column:span 3}
   .msave #saveAll,.msave #rSaveAll{flex:1;margin-inline-start:0}
+  .imgname{max-width:110px}.imgpick{gap:.5rem}
   input,select,textarea{font-size:16px} /* מונע זום אוטומטי באייפון בזמן הקלדה */
 }
 </style>
@@ -381,7 +403,7 @@ async function post(body,silent){
 }
 function showLogin(msg){
   $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#views").hidden=true;$("#err").textContent=msg||"";
-  clearInterval(timer);
+  clearInterval(timer);WARMED=false;
 }
 // איש צוות: רואה הזמנות ורשימות, ויכול רק לשנות סטטוס הזמנה (לא לבטל). השרת אוכף את זה בכל מקרה.
 function setRole(r){
@@ -393,6 +415,7 @@ function setRole(r){
 function showApp(){$("#login").hidden=true;$("#app").hidden=false;$("#logout").hidden=false;$("#views").hidden=false}
 
 async function loadOrders(initial,silent){
+  if(initial)warm(); // התפריט והרשימות נטענים במקביל להזמנות, לא אחריהן
   try{
     const d=await get("orders",silent);
     if(Array.isArray(d)){showLogin("השרת מחזיר גרסה ישנה של הקוד. יש לפרסם גרסה חדשה ב-Apps Script (Deploy → Manage deployments → New version).");return false}
@@ -404,7 +427,7 @@ async function loadOrders(initial,silent){
     const nos=new Set(ORDERS.map(o=>o.orderNo));
     if(known&&[...nos].some(n=>!known.has(n))){beep();toast("הזמנה חדשה!")}
     known=nos;
-    showApp();renderOrders();if(initial)warm();return true;
+    showApp();renderOrders();if(initial)warmAdmin();return true;
   }catch(e){if(initial)showLogin("שגיאת חיבור. נסו שוב.");else toast("שגיאת חיבור");return false}
 }
 function fmtTime(t){const d=new Date(t);return isNaN(d)?"":d.toLocaleString("he-IL",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
@@ -481,15 +504,30 @@ function sumRow(list){
 let WARMED=false;
 // רענון שקט לא מצייר מחדש מסך שמקלידים בו כרגע (כדי לא למחוק טקסט באמצע הקלדה)
 const busyTyping=sel=>{const a=document.activeElement;return !!(a&&a.closest(sel)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))};
-function warm(){if(WARMED)return;WARMED=true;setTimeout(()=>{if(ROLE==="admin"){if(!$("#menu").innerHTML.trim())loadMenu(true);loadStaff(true)}if(!LDATA)loadLists(true)},400)}
-async function loadMenu(silent){
-  try{
-    const d=await get("menuall",silent);
-    if(d.error){showLogin("המפתח שגוי.");return}
-    if(silent&&(busyTyping("#menu")||document.querySelector("#menu .card.dirty")))return;
-    const rows=d.menu.map(m=>menuCard(m)).join("");
-    $("#menu").innerHTML=rows+'<div class="msave"><span class="mdirty" id="mdirty"></span><button class="primary" id="saveAll" disabled>שמירת כל השינויים</button></div>';
-  }catch(e){toast("שגיאת חיבור")}
+// warm: מתחיל לטעון את התפריט והרשימות כבר בכניסה, במקביל להזמנות. warmAdmin: את רשימת הצוות, אחרי שידוע שזה המנהל.
+function warm(){if(WARMED)return;WARMED=true;loadMenu(true);if(!LDATA)loadLists(true)}
+function warmAdmin(){if(ROLE==="admin"&&!STAFF_LOADED)loadStaff(true)}
+// התפריט נשמר גם במכשיר: בכניסה הבאה הוא מוצג מיד, ומתעדכן מהשרת ברקע
+const MENU_CACHE="jt_admin_menu_"+(USE_FB?"fb":"gs");
+let MENU_P=null;
+function drawMenu(menu){
+  setTimeout(hydrateImgs,0);
+  $("#menu").innerHTML=menu.map(m=>menuCard(m)).join("")+'<div class="msave"><span class="mdirty" id="mdirty"></span><button class="primary" id="saveAll" disabled>שמירת כל השינויים</button></div>';
+}
+function loadMenu(silent){
+  if(!$("#menu").innerHTML.trim()){try{const c=JSON.parse(localStorage.getItem(MENU_CACHE)||"null");if(Array.isArray(c)&&c.length)drawMenu(c)}catch(e){}}
+  if(MENU_P)return MENU_P; // כבר בטעינה – לא שולחים בקשה נוספת
+  MENU_P=(async()=>{
+    try{
+      const d=await get("menuall",silent);
+      if(d.error){if(!silent)showLogin("המפתח שגוי.");return}
+      try{localStorage.setItem(MENU_CACHE,JSON.stringify(d.menu))}catch(e){}
+      MENU_NAMES=d.menu.map(x=>String(x.name||"")).filter(Boolean); // גם לרשימות (מתכונים), בלי בקשה נוספת
+      if(silent&&(busyTyping("#menu")||document.querySelector("#menu .card.dirty")))return; // לא מוחקים עריכה באמצע
+      drawMenu(d.menu);
+    }catch(e){if(!silent)toast("שגיאת חיבור")}
+  })().finally(()=>{MENU_P=null});
+  return MENU_P;
 }
 function menuCard(m){
   m=m||{row:0,cat:"",name:"",desc:"",price:"",active:"כן",img:""};
@@ -500,7 +538,7 @@ function menuCard(m){
       <div class="f-cat"><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
       <div class="f-act"><label class="active-toggle"><input data-f="active" type="checkbox"${m.active!=="לא"?" checked":""}>מוצגת בתפריט</label></div>
       <div class="f-desc"><label>תיאור</label><textarea data-f="desc" rows="3">${esc(m.desc)}</textarea></div>
-      <div class="f-img"><label>תמונה (נתיב)</label><input data-f="img" value="${esc(m.img)}" placeholder="images/dish.jpg" dir="ltr"></div>
+      <div class="f-img"><label>תמונה</label><div class="imgpick"><span class="imgprev">${m.img?`<img data-src="${esc(m.img)}" alt="">`:"אין תמונה"}</span><input data-f="img" type="hidden" value="${esc(m.img)}"><span class="imgname" dir="ltr">${esc(imgLabel(m.img))}</span><button type="button" class="ghost" data-pickimg>בחירת תמונה</button>${m.img?`<button type="button" class="lic del" data-noimg title="הסרת התמונה" aria-label="הסרת התמונה">${TRASH}</button>`:""}</div></div>
     </div>
   </div>`;
 }
@@ -534,7 +572,7 @@ document.addEventListener("click",async e=>{
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
     $("#orders").hidden=other;$("#menu").hidden=v!=="menu";$("#lists").hidden=v!=="lists";$("#staff").hidden=v!=="staff";
     // מציגים מיד את מה שכבר נטען, ומרעננים ברקע בלי מסך טעינה
-    if(v==="menu"){if(!$("#menu").innerHTML.trim())loadMenu()}
+    if(v==="menu"){if(!$("#menu").innerHTML.trim()){busy(1);loadMenu(true).finally(()=>busy(-1))}}
     else if(v==="lists"){if(LDATA){renderLists();loadLists(true)}else loadLists()}
     else if(v==="staff"){if(STAFF_LOADED){renderStaff();loadStaff(true)}else loadStaff()}
     else{renderOrders();loadOrders(false,true)}
@@ -655,6 +693,7 @@ async function loadLists(silent){
     if(d&&d.error==="unauthorized"){showLogin("המפתח שגוי.");return}
     if(!d||!d.lists){$("#lists").innerHTML=`<div class="empty">השרת עדיין לא תומך ברשימות. יש להדביק את Code.gs החדש ב-Apps Script ולפרסם גרסה חדשה.</div>`;return}
     LDATA=d.lists;RECIPES=d.recipes||[];
+    if(!MENU_NAMES.length&&MENU_P)await MENU_P;
     if(!MENU_NAMES.length){try{const m=await get("menuall",true);MENU_NAMES=(m.menu||[]).map(x=>String(x.name||"")).filter(Boolean)}catch(e){}}
     if(LT==="count")await loadOrders(false,true);
     if(!(silent&&(busyTyping("#lists")||document.querySelector("#lists .rcp.dirty"))))renderLists();
@@ -902,6 +941,104 @@ document.addEventListener("click",async e=>{
   }
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest("#staff .stf-add input")){e.preventDefault();document.querySelector("#staff [data-sadd]").click()}});
+</script>
+<script>
+// ===== תמונות מנות: בחירה מרשימה + העלאה מהמחשב (רק מנהל, במצב Firebase) =====
+const FS="https://firestore.googleapis.com/v1/projects/jony-thai/databases/(default)/documents",FS_KEY="AIzaSyB9Xv5GMEx_-wCfcsAW8HkIRS8TY0BoL5I";
+const GH_IMAGES="https://api.github.com/repos/jonynemes/jony-thai/contents/images";
+const fsStr=v=>v&&("stringValue" in v)?v.stringValue:"";
+const IMG_CACHE={};
+function imgLabel(p){p=String(p||"");if(!p)return "";if(p.startsWith("fbimg:"))return (IMG_NAMES[p.slice(6)]||"תמונה שהועלתה");return p.replace(/^images\//,"")}
+const IMG_NAMES={};
+async function imgSrc(p){
+  p=String(p||"");if(!p.startsWith("fbimg:"))return p;
+  const id=p.slice(6);if(IMG_CACHE[id])return IMG_CACHE[id];
+  try{const r=await fetch(FS+"/images/"+encodeURIComponent(id)+"?mask.fieldPaths=data&mask.fieldPaths=name&key="+FS_KEY);if(!r.ok)return "";const f=(await r.json()).fields||{};IMG_NAMES[id]=fsStr(f.name);return IMG_CACHE[id]=fsStr(f.data)}catch(e){return ""}
+}
+function hydrateImgs(root){
+  (root||document).querySelectorAll("#menu img[data-src]").forEach(async im=>{const s=await imgSrc(im.dataset.src);if(s){im.src=s;im.onerror=()=>im.replaceWith("התמונה לא נמצאה")}else im.replaceWith("התמונה לא נמצאה");
+    const nm=im.closest&&im.closest(".imgpick");if(nm&&im.dataset.src.startsWith("fbimg:"))nm.querySelector(".imgname").textContent=imgLabel(im.dataset.src)});
+}
+function setCardImg(card,path){
+  const inp=card.querySelector('[data-f="img"]');inp.value=path;
+  const pk=card.querySelector(".imgpick");
+  pk.querySelector(".imgprev").innerHTML=path?`<img data-src="${esc(path)}" alt="">`:"אין תמונה";
+  pk.querySelector(".imgname").textContent=imgLabel(path);
+  const rm=pk.querySelector("[data-noimg]");if(path&&!rm)pk.insertAdjacentHTML("beforeend",`<button type="button" class="lic del" data-noimg title="הסרת התמונה" aria-label="הסרת התמונה">${TRASH}</button>`);if(!path&&rm)rm.remove();
+  card.classList.add("dirty");markDirty();hydrateImgs(card);
+}
+// רשימת התמונות: מהאתר (תיקיית images ב-GitHub) + מה שהועלה ל-Firebase
+let REPO_IMGS=null;
+async function repoImages(){
+  if(REPO_IMGS)return REPO_IMGS;
+  try{
+    const r=await fetch(GH_IMAGES);if(!r.ok)throw 0;
+    const files=(await r.json()).map(f=>f.name).filter(n=>/\.(webp|jpe?g|png)$/i.test(n)&&!/^og\./i.test(n));
+    const webp=new Set(files.filter(n=>/\.webp$/i.test(n)).map(n=>n.replace(/\.webp$/i,"").toLowerCase()));
+    REPO_IMGS=files.filter(n=>/\.webp$/i.test(n)||!webp.has(n.replace(/\.(jpe?g|png)$/i,"").toLowerCase())).map(n=>({path:"images/"+n,src:"images/"+n,name:n}));
+  }catch(e){REPO_IMGS=[]}
+  return REPO_IMGS;
+}
+async function dbImages(){
+  try{const r=await fetch(FS+"/images?pageSize=200&mask.fieldPaths=name&mask.fieldPaths=thumb&mask.fieldPaths=created&key="+FS_KEY);if(!r.ok)return [];
+    return ((await r.json()).documents||[]).map(d=>{const id=d.name.split("/").pop(),f=d.fields||{};IMG_NAMES[id]=fsStr(f.name);return {path:"fbimg:"+id,id,src:fsStr(f.thumb),name:fsStr(f.name)||"תמונה",created:Number((f.created||{}).integerValue||0)}}).sort((a,b)=>b.created-a.created)}catch(e){return []}
+}
+const canUpload=()=>USE_FB&&window.FB&&FB.role()==="admin";
+async function pickImage(card){
+  const w=document.createElement("div");w.className="amodal";
+  w.innerHTML=`<div class="abox ipick" role="dialog" aria-modal="true" aria-label="בחירת תמונה"><h3>בחירת תמונה</h3>
+    ${canUpload()?`<label class="iup"><input type="file" accept="image/*" hidden><span>⬆ העלאת תמונה מהמחשב</span></label>`:`<p class="ihint">העלאה מהמחשב זמינה למנהל במצב Firebase.</p>`}
+    <div class="igrid"><div class="empty">טוען תמונות…</div></div>
+    <div class="abtns"><button type="button" class="ghost" data-acancel>סגירה</button></div></div>`;
+  const close=()=>{w.remove();document.removeEventListener("keydown",onKey)};
+  const onKey=e=>{if(e.key==="Escape")close()};document.addEventListener("keydown",onKey);
+  document.body.appendChild(w);
+  const cur=card.querySelector('[data-f="img"]').value;
+  const draw=async()=>{
+    const [db,repo]=await Promise.all([dbImages(),repoImages()]);
+    const all=[...db,...repo];
+    w.querySelector(".igrid").innerHTML=all.length?all.map(x=>`<div class="icell${x.path===cur?" on":""}"><button type="button" class="ipic" data-ipath="${esc(x.path)}" title="${esc(x.name)}"><img src="${esc(x.src)}" alt="" loading="lazy"><span>${esc(x.name)}</span></button>${x.id&&canUpload()?`<button type="button" class="idel" data-idel="${esc(x.id)}" title="מחיקת התמונה" aria-label="מחיקת התמונה">×</button>`:""}</div>`).join(""):`<div class="empty">אין תמונות עדיין.</div>`;
+  };
+  draw();
+  w.addEventListener("click",async e=>{
+    if(e.target===w||e.target.closest("[data-acancel]"))return close();
+    const p=e.target.closest("[data-ipath]");if(p){setCardImg(card,p.dataset.ipath);close();return}
+    const del=e.target.closest("[data-idel]");
+    if(del){
+      const used=[...document.querySelectorAll('#menu [data-f="img"]')].some(i=>i.value==="fbimg:"+del.dataset.idel);
+      if(!confirm(used?"התמונה הזאת משמשת מנה בתפריט. למחוק בכל זאת?":"למחוק את התמונה?"))return;
+      const r=await post({action:"imageDelete",id:del.dataset.idel},true);if(r!=="ok"){toast(postErr(r));return}
+      toast("התמונה נמחקה");draw();
+    }
+  });
+  const fi=w.querySelector('input[type="file"]');
+  if(fi)fi.onchange=async()=>{
+    const f=fi.files[0];if(!f)return;
+    const lab=w.querySelector(".iup span"),old=lab.textContent;lab.textContent="מעבד ומעלה…";
+    try{
+      const img=await loadImg(f);
+      const data=toWebp(img,1000,.8),thumb=toWebp(img,220,.7);
+      const r=await post({action:"imageAdd",name:f.name.replace(/\.[^.]+$/,""),data,thumb});
+      if(!r.startsWith("ok:")){toast(r==="bad image"?"התמונה גדולה מדי או בפורמט לא נתמך":postErr(r));lab.textContent=old;return}
+      const id=r.slice(3);IMG_CACHE[id]=data;IMG_NAMES[id]=f.name.replace(/\.[^.]+$/,"");
+      setCardImg(card,"fbimg:"+id);close();toast("התמונה הועלתה – לא לשכוח לשמור");
+    }catch(e){toast("לא הצלחנו לקרוא את הקובץ");lab.textContent=old}
+  };
+}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej()};im.src=u})}
+// מקטינים בדפדפן ל-WebP (הצלע הארוכה עד max פיקסלים), כדי שהתמונה תהיה קלה ומהירה לטעינה
+function toWebp(im,max,q){
+  const s=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");
+  c.width=Math.round(im.naturalWidth*s);c.height=Math.round(im.naturalHeight*s);
+  c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+  let d=c.toDataURL("image/webp",q);if(!d.startsWith("data:image/webp"))d=c.toDataURL("image/jpeg",q);
+  return d;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("#menu [data-pickimg],#menu [data-noimg]");if(!b)return;
+  const card=b.closest(".card");
+  if(b.hasAttribute("data-noimg"))setCardImg(card,"");else pickImage(card);
+});
 </script>
 </body>
 </html>
