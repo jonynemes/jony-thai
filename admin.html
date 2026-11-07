@@ -123,12 +123,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .idel{position:absolute;top:4px;left:4px;width:26px;height:26px;padding:0;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:1.1rem;line-height:1}
 .idel:hover{background:#c8102e}
 .grid2{display:grid;grid-template-columns:repeat(6,1fr);gap:.9rem 1.1rem;margin-bottom:.9rem}
-.f-name{grid-column:span 3}.f-price,.f-cat,.f-act{grid-column:span 1}.f-desc{grid-column:1/-1}.f-img{grid-column:span 3}
+.f-name{grid-column:span 3}.f-price,.f-cat,.f-act{grid-column:span 1}.f-desc{grid-column:1/-1}.f-img{grid-column:span 3}.f-spicy{grid-column:span 2}.f-vegan{grid-column:span 1;align-self:end;padding-bottom:.7rem}
 .grid2 input,.grid2 select,.grid2 textarea{padding:.7rem .85rem;font-size:1.02rem}
 .grid2 textarea{resize:vertical;line-height:1.5}
 .grid2 input[type=checkbox]{width:1.35rem;height:1.35rem;padding:0;accent-color:var(--ok);cursor:pointer}
-.f-act .active-toggle{display:flex;align-items:center;gap:.45rem;margin:0}
-@media (max-width:700px){.grid2{grid-template-columns:1fr 1fr}.f-name,.f-desc,.f-img{grid-column:1/-1}.f-price,.f-cat,.f-act{grid-column:span 1}}
+.f-act .active-toggle,.f-vegan .active-toggle{display:flex;align-items:center;gap:.45rem;margin:0}
+@media (max-width:700px){.grid2{grid-template-columns:1fr 1fr}.f-name,.f-desc,.f-img{grid-column:1/-1}.f-price,.f-cat,.f-act,.f-spicy,.f-vegan{grid-column:span 1}}
 .grid2 label{font-size:.9rem;font-weight:600;display:block;margin-bottom:.25rem;opacity:.85}
 #login{max-width:380px;margin:3rem auto;text-align:center}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;margin-top:.8rem;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:var(--r);padding:.7rem 1rem;font-weight:700}
@@ -529,8 +529,10 @@ function loadMenu(silent){
   })().finally(()=>{MENU_P=null});
   return MENU_P;
 }
+// טבעונית: לפי הסימון שנשמר. מנה שעוד לא סומנה – לפי המילה "טבעוני" בשם
+const isVegan=m=>m.vegan==="כן"||m.vegan===true||((m.vegan===undefined||m.vegan===null||m.vegan==="")&&/טבעוני/.test(String(m.name||"")));
 function menuCard(m){
-  m=m||{row:0,cat:"",name:"",desc:"",price:"",active:"כן",img:""};
+  m=m||{row:0,cat:"",name:"",desc:"",price:"",active:"כן",img:"",spicy:0};
   return `<div class="card" data-row="${m.row}">
     <div class="grid2">
       <div class="f-name"><label>שם המנה</label><input data-f="name" value="${esc(m.name)}"></div>
@@ -538,6 +540,8 @@ function menuCard(m){
       <div class="f-cat"><label>קטגוריה</label><input data-f="cat" value="${esc(m.cat)}"></div>
       <div class="f-act"><label class="active-toggle"><input data-f="active" type="checkbox"${m.active!=="לא"?" checked":""}>מוצגת בתפריט</label></div>
       <div class="f-desc"><label>תיאור</label><textarea data-f="desc" rows="3">${esc(m.desc)}</textarea></div>
+      <div class="f-vegan"><label class="active-toggle"><input data-f="vegan" type="checkbox"${isVegan(m)?" checked":""}>🌿 טבעונית</label></div>
+      <div class="f-spicy"><label>רמת חריפות</label><select data-f="spicy">${[0,1,2,3,4,5].map(n=>`<option value="${n}"${(Number(m.spicy)||0)===n?" selected":""}>${n?"🌶️".repeat(n)+" "+n:"ללא"}</option>`).join("")}</select></div>
       <div class="f-img"><label>תמונה</label><div class="imgpick"><span class="imgprev">${m.img?`<img data-src="${esc(m.img)}" alt="">`:"אין תמונה"}</span><input data-f="img" type="hidden" value="${esc(m.img)}"><span class="imgname" dir="ltr">${esc(imgLabel(m.img))}</span><button type="button" class="ghost" data-pickimg>בחירת תמונה</button>${m.img?`<button type="button" class="lic del" data-noimg title="הסרת התמונה" aria-label="הסרת התמונה">${TRASH}</button>`:""}</div></div>
     </div>
   </div>`;

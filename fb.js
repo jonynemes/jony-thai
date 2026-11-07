@@ -154,7 +154,7 @@ async function post(body) {
       case "saveMenuRow": case "addMenuRow": {
         const m = d.item || {}, price = Number(m.price);
         if (!m.name || isNaN(price) || price < 0) return "bad item";
-        const row = { cat: clean(m.cat), name: clean(m.name), desc: clean(m.desc), price, active: m.active === "לא" ? "לא" : "כן", img: clean(m.img) };
+        const row = { cat: clean(m.cat), name: clean(m.name), desc: clean(m.desc), price, active: m.active === "לא" ? "לא" : "כן", img: clean(m.img), spicy: Math.max(0, Math.min(5, Math.round(Number(m.spicy) || 0))), vegan: m.vegan === "כן" ? "כן" : "לא" };
         if (d.action === "saveMenuRow" && m.row) { await setDoc(doc(db, "menu", String(m.row)), row, { merge: true }); return "ok"; }
         const all = await getDocs(collection(db, "menu"));
         row.order = Math.max(0, ...all.docs.map(x => x.data().order || 0)) + 1;
@@ -265,7 +265,7 @@ async function importSheets(url, oldKey) {
   if (o.error || l.error || m.error) return "bad admin";
   const ops = [];
   (m.menu || []).filter(x => x.name).forEach((x, i) => ops.push(b => b.set(doc(db, "menu", "m" + String(i + 1).padStart(3, "0")),
-    { cat: clean(x.cat), name: clean(x.name), desc: clean(x.desc), price: Number(x.price) || 0, active: String(x.active).trim() === "לא" ? "לא" : "כן", img: clean(x.img), order: i + 1 })));
+    { cat: clean(x.cat), name: clean(x.name), desc: clean(x.desc), price: Number(x.price) || 0, active: String(x.active).trim() === "לא" ? "לא" : "כן", img: clean(x.img), spicy: Math.max(0, Math.min(5, Math.round(Number(x.spicy) || 0))), ...(x.vegan === "כן" || x.vegan === "לא" ? { vegan: x.vegan } : {}), order: i + 1 })));
   (o.orders || []).filter(x => x.orderNo).forEach(x => { const t = new Date(x.time);
     ops.push(b => b.set(doc(db, "orders", String(x.orderNo)), { orderNo: String(x.orderNo), name: clean(x.name), phone: clean(x.phone), items: String(x.items || ""), note: clean(x.note), total: Number(x.total) || 0, status: STATUSES.includes(x.status) ? x.status : "חדשה", time: isNaN(t) ? serverTimestamp() : Timestamp.fromDate(t) })); });
   let t = Date.now();

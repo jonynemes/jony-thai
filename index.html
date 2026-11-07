@@ -101,6 +101,23 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:.65rem 1.
 .qn{min-width:1.5rem;text-align:center;font-weight:600;font-size:1rem}
 .note{width:100%;margin-top:.7rem;display:none}
 .dish.has.noteon .note{display:block}
+.notewrap{grid-area:note;display:none;margin-top:.7rem}
+.dish.has.noteon .notewrap{display:block}
+.notewrap .note{display:block;margin-top:.5rem}
+.opts{display:flex;flex-wrap:wrap;gap:.45rem}
+.optchip{display:inline-flex;align-items:center;cursor:pointer;user-select:none}
+.optchip input{position:absolute;opacity:0;pointer-events:none}
+.optchip span{padding:.35rem .8rem;border:1.5px solid color-mix(in srgb,var(--gold) 70%,transparent);border-radius:999px;font-size:.9rem;font-weight:600;transition:background .15s,border-color .15s}
+.optchip input:checked+span{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.optchip input:checked+span::before{content:"✓ "}
+.optchip input:focus-visible+span{outline:3px solid var(--saffron);outline-offset:2px}
+.dishm .opts{justify-content:flex-start}
+.chili{display:inline-flex;gap:1px;vertical-align:middle;margin-inline-start:.3rem;transform:translateY(-1px)}
+.chili svg{display:block}
+.vegan{display:inline-flex;vertical-align:middle;margin-inline-start:.3rem;transform:translateY(-1px)}
+.vegan svg{display:block}
+.dishm .vegan svg{width:18px;height:18px}
+.dishm .chili svg{width:17px;height:17px}
 .notebtn{grid-area:nb;justify-self:start;background:none;border:0;padding:.15rem 0;margin-top:.2rem;border-radius:0;font-size:.88rem;font-weight:600;color:var(--gold);opacity:.9;cursor:pointer;visibility:hidden;opacity:0;transition:opacity .2s}
 .dish.has .notebtn{visibility:visible;opacity:.9}
 @media (hover:hover){.notebtn:hover{opacity:1;text-decoration:underline;text-underline-offset:3px;transform:none}}
@@ -173,20 +190,31 @@ input[aria-invalid="true"]{border-color:var(--chili);box-shadow:0 0 0 2px color-
 .modal .card{background:var(--card);color:var(--ink);border:2px solid var(--gold);border-radius:var(--r);padding:1.7rem;max-width:380px;width:100%;text-align:center}
 .modal .card h3{font-size:1.7rem;color:var(--head);margin-bottom:.5rem}
 .dish{cursor:pointer}
-.modal .card.dishm{max-width:420px;padding:0;overflow:hidden;text-align:start;max-height:92vh;overflow-y:auto}
-.dm-img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--line);border-bottom:2px solid var(--gold)}
-.dm-body{padding:1.2rem 1.4rem 1.4rem}
-.dishm h3{font-size:1.55rem;margin:0 0 .35rem}
-.dm-desc{margin:0 0 .6rem;opacity:.78;line-height:1.55}
-.dm-price{font-family:"Suez One",serif;color:var(--price);font-size:1.6rem;margin-bottom:.8rem}
-.dm-qty{display:flex;align-items:center;justify-content:center;gap:1.2rem;margin:.2rem 0 .9rem}
-.dm-qty .qb{width:2.6rem;height:2.6rem;font-size:1.4rem}
+/* ===== חלון פרטי מנה – עיצוב עדין ===== */
+.modal .card.dishm{position:relative;max-width:560px;padding:0;overflow:hidden;text-align:start;max-height:92vh;overflow-y:auto;border-width:1px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.dm-media{position:relative;height:260px;overflow:hidden;background:var(--jade)}
+.dm-media::before{content:"";position:absolute;inset:-30px;background:var(--dmbg) center/cover;filter:blur(22px) brightness(.55) saturate(1.1)}
+.dm-img{position:relative;display:block;width:100%;height:100%;object-fit:contain}
+.dm-x{position:absolute;top:.6rem;left:.6rem;z-index:2;width:2.1rem;height:2.1rem;padding:0;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:1.25rem;line-height:1;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.dm-x:hover{background:rgba(0,0,0,.65)}
+.dishm:not(:has(.dm-media)) .dm-x{background:transparent;color:var(--ink);opacity:.6}
+.dm-body{padding:1.1rem 1.4rem 1.2rem}
+.dm-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.dishm h3{font-size:1.4rem;line-height:1.3;margin:0}
+.dm-price{font-family:"Suez One",serif;color:var(--price);font-size:1.35rem;white-space:nowrap}
+.dm-desc{margin:.35rem 0 .9rem;opacity:.72;line-height:1.55;font-size:.95rem}
+.dm-on{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-bottom:1rem}
+.dm-on .opts{margin:0}
+.dishm .optchip span{font-size:.85rem;padding:.3rem .8rem;border-width:1px}
+.dm-note{flex:1 1 180px;min-width:0;margin:0;font-size:.92rem;padding:.5rem .75rem;border-radius:999px}
+.dm-foot{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding-top:.9rem;border-top:1px solid color-mix(in srgb,var(--gold) 25%,transparent)}
+.dm-qty{display:flex;align-items:center;gap:.6rem}
+.dm-qty .qb{width:2.2rem;height:2.2rem;font-size:1.1rem;border-width:1px}
 .dm-qty .dm-plus{background:var(--saffron);border-color:var(--saffron);color:#fff}
-#dmQ{min-width:2rem;text-align:center;font-weight:700;font-size:1.4rem}
-.dm-note{width:100%;margin-bottom:1rem}
-.dm-acts{display:flex;gap:.6rem}
-.dm-acts .primary{flex:1}
-.dm-acts .dm-remove{background:var(--chili)}
+#dmQ{min-width:1.6rem;text-align:center;font-weight:700;font-size:1.1rem}
+#dmAdd{padding:.6rem 1.3rem;font-size:.95rem;border-radius:999px}
+#dmAdd.dm-remove{background:var(--chili)}
+@media (max-width:560px){.dm-media{height:210px}.dm-body{padding:1rem 1.1rem 1.1rem}}
 .spin{width:2.6rem;height:2.6rem;border:4px solid var(--line);border-top-color:var(--saffron);border-radius:50%;margin:.4rem auto 1rem;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.5s}}
@@ -273,6 +301,20 @@ const total = ()=>Object.entries(cart).reduce((s,[id,c])=>s+c.q*ALL.find(x=>x.id
 const count = ()=>Object.values(cart).reduce((s,c)=>s+c.q,0);
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+// ===== רמת חריפות ובקשות מיוחדות למנה =====
+const CHILI='<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="#d62828" d="M14.6 6.6c3.1.5 5.4 3.1 5.4 6.5 0 5-5 8.9-11 8.9-2 0-3.5-.6-4.5-1.5 4-.5 7-3 8-7 .5-2.2.9-4.7 2.1-6.9z"/><path fill="#2e9d5b" d="M14.1 7.1c-.3-2.1.5-3.7 2.4-4.6l.8 1.3c-1.4.7-1.9 1.8-1.7 3.3z"/></svg>';
+function chilis(n){n=Number(n)||0;return n?` <span class="chili" title="רמת חריפות ${n} מתוך 5" aria-label="רמת חריפות ${n} מתוך 5">${CHILI.repeat(n)}</span>`:""}
+// עלה ירוק למנה טבעונית
+const LEAF='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#2e9d5b" d="M20.5 3.5C11 3.6 4.5 8.4 4.5 15.2c0 1.6.4 3 1.1 4.2C7.9 13.6 12 10 16.6 8.1c-4 2.7-7.4 6.6-9.4 12.1 1.2.8 2.7 1.3 4.3 1.3 6.6 0 9.8-6.6 9-18z"/></svg>';
+function badges(i){return (i.v?` <span class="vegan" title="מנה טבעונית" aria-label="מנה טבעונית">${LEAF}</span>`:"")+chilis(i.s)}
+const OPT_LIST=["בלי בוטנים","בלי כוסברה"];
+const OPTS={}; // id -> בקשות שנבחרו
+function optChips(id,attr){return `<div class="opts">${OPT_LIST.map(o=>`<label class="optchip"><input type="checkbox" ${attr}="${id}" value="${o}"${(OPTS[id]||[]).includes(o)?" checked":""}><span>${o}</span></label>`).join("")}</div>`}
+// הבקשות וההערה החופשית נכנסות יחד לשורת המנה בהזמנה: "1× פאד תאי (בלי בוטנים, בלי כוסברה, פחות חריף)"
+function noteOf(id){return [...(OPTS[id]||[]),(NOTES[id]||"").trim()].filter(Boolean).join(", ")}
+function nbLabel(id){return noteOf(id)?"✎ עריכת בקשות והערות":"+ בקשות והערות למנה"}
+document.addEventListener("change",e=>{const c=e.target.closest("[data-opt]");if(!c)return;const id=c.dataset.opt;
+  OPTS[id]=[...document.querySelectorAll(`[data-opt="${id}"]:checked`)].map(x=>x.value)});
 function showModal(h){$("#modalCard").innerHTML=h;$("#modal").classList.add("on")}
 function hideModal(){$("#modal").classList.remove("on");$("#modalCard").classList.remove("dishm")}
 // ===== חלון פרטי מנה: לחיצה על מנה בתפריט פותחת תמונה גדולה, תיאור, כמות והערה =====
@@ -281,12 +323,14 @@ function openDish(id){
   const i=ALL.find(x=>x.id===id);if(!i)return;
   const inCart=cart[id]?cart[id].q:0;DM={id,q:inCart||1,had:inCart};
   const cardImg=document.querySelector("#d-"+id+" img"),src=cardImg&&cardImg.src&&cardImg.complete&&cardImg.naturalWidth?cardImg.src:(i.img&&!String(i.img).startsWith("fbimg:")?i.img:"");
-  showModal(`${src?`<img class="dm-img" src="${esc(src)}" alt="${esc(i.n)}">`:""}
-    <div class="dm-body"><h3>${esc(i.n)}</h3>${i.d?`<p class="dm-desc">${esc(i.d)}</p>`:""}
-    <div class="dm-price"><span class="nis">₪</span>${i.p}</div>
-    <div class="dm-qty"><button class="qb" data-dmq="-1" aria-label="הפחת">−</button><span id="dmQ">${DM.q}</span><button class="qb dm-plus" data-dmq="1" aria-label="הוסף">+</button></div>
-    <input class="dm-note" id="dmNote" placeholder="הערה למנה: חריפות, בלי בוטנים..." value="${esc(NOTES[id]||"")}">
-    <div class="dm-acts"><button class="ghost" data-dmclose>סגירה</button><button class="primary" id="dmAdd"></button></div></div>`);
+  showModal(`<button class="dm-x" data-dmclose aria-label="סגירה">×</button>
+    ${src?`<div class="dm-media" style="--dmbg:url('${esc(src)}')"><img class="dm-img" src="${esc(src)}" alt="${esc(i.n)}"></div>`:""}
+    <div class="dm-body">
+      <div class="dm-head"><h3>${esc(i.n)}${badges(i)}</h3><div class="dm-price"><span class="nis">₪</span>${i.p}</div></div>
+      ${i.d?`<p class="dm-desc">${esc(i.d)}</p>`:""}
+      <div class="dm-on">${optChips(id,"data-dmopt")}<input class="dm-note" id="dmNote" placeholder="הערה נוספת למנה..." value="${esc(NOTES[id]||"")}"></div>
+      <div class="dm-foot"><div class="dm-qty"><button class="qb" data-dmq="-1" aria-label="הפחת">−</button><span id="dmQ">${DM.q}</span><button class="qb dm-plus" data-dmq="1" aria-label="הוסף">+</button></div><button class="primary" id="dmAdd"></button></div>
+    </div>`);
   $("#modalCard").classList.add("dishm");dmLabel();
 }
 function dmLabel(){
@@ -296,11 +340,13 @@ function dmLabel(){
 }
 function dmApply(){
   const id=DM.id,note=$("#dmNote").value.trim(),cur=cart[id]?cart[id].q:0;
+  OPTS[id]=[...document.querySelectorAll("#modalCard [data-dmopt]:checked")].map(x=>x.value);
+  document.querySelectorAll(`[data-opt="${id}"]`).forEach(x=>x.checked=OPTS[id].includes(x.value));
   NOTES[id]=note;if(cart[id])cart[id].note=note;
   change(id,DM.q-cur);if(cart[id])cart[id].note=note;
   // מסנכרנים את ההערה גם בכרטיס המנה
   const ni=document.querySelector(`[data-note="${id}"]`);if(ni)ni.value=note;
-  const nb=document.querySelector(`[data-nb="${id}"]`);if(nb&&!$("#d-"+id).classList.contains("noteon"))nb.textContent=note?"✎ עריכת הערה":"+ הוסף הערה למנה";
+  const nb=document.querySelector(`[data-nb="${id}"]`);if(nb&&!$("#d-"+id).classList.contains("noteon"))nb.textContent=nbLabel(id);
   hideModal();DM=null;toast(cart[id]?"עודכן בהזמנה":"הוסר מההזמנה");
 }
 document.addEventListener("click",e=>{
@@ -311,7 +357,7 @@ document.addEventListener("click",e=>{
     return;
   }
   const d=e.target.closest(".dish");
-  if(!d||e.target.closest("button,input,textarea,a"))return;
+  if(!d||e.target.closest("button,input,textarea,a,label,.notewrap"))return;
   if(CLOSED)return closedMsg();
   openDish(d.id.slice(2));
 });
@@ -325,10 +371,10 @@ function go(v){document.querySelectorAll(".view").forEach(e=>e.classList.toggle(
 
 function renderMenu(){
   $("#menu").innerHTML=`<div class="menucard"><h2 class="menutitle">המנות שלנו</h2>`+MENU.map(c=>`${c.cat?`<h3 class="cat">${c.cat}</h3>`:""}<div class="grid">`+c.items.map(i=>`
-    <div class="dish" id="d-${i.id}">${i.img?(String(i.img).startsWith("fbimg:")?`<img data-fbimg="${esc(String(i.img).slice(6))}" alt="${esc(i.n)}">`:`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`):""}<div class="top"><span>${i.n}</span><span class="lead"></span><span class="price"><span class="nis">₪</span>${i.p}</span></div>
+    <div class="dish" id="d-${i.id}">${i.img?(String(i.img).startsWith("fbimg:")?`<img data-fbimg="${esc(String(i.img).slice(6))}" alt="${esc(i.n)}">`:`<img src="${esc(i.img)}" alt="${esc(i.n)}" loading="lazy" onerror="this.remove()">`):""}<div class="top"><span>${i.n}${badges(i)}</span><span class="lead"></span><span class="price"><span class="nis">₪</span>${i.p}</span></div>
     <small>${i.d}</small>
     <div class="qty"><button class="qb" data-m="${i.id}" aria-label="הפחת">−</button><span class="qn" id="q-${i.id}">0</span><button class="qb" data-p="${i.id}" aria-label="הוסף">+</button></div>
-    <button class="notebtn" type="button" data-nb="${i.id}">+ הוסף הערה למנה</button><input class="note" data-note="${i.id}" placeholder="הערה למנה: חריפות, בלי בוטנים..."></div>`).join("")+`</div>`).join("")+`<div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
+    <button class="notebtn" type="button" data-nb="${i.id}">${nbLabel(i.id)}</button><div class="notewrap">${optChips(i.id,"data-opt")}<input class="note" data-note="${i.id}" placeholder="הערה נוספת למנה..." value="${esc(NOTES[i.id]||"")}"></div></div>`).join("")+`</div>`).join("")+`<div class="orderbar" id="bar"><span id="barTxt"></span><button class="primary" data-go="order">להזמנה</button></div></div>`;
   updateBar();applyClosed();loadFbImages();
 }
 // תמונות שהועלו מממשק הניהול נשמרות ב-Firebase. נטענות פעם אחת ונשמרות בטלפון – בביקור הבא מוצגות מיד.
@@ -350,10 +396,10 @@ function change(id,delta){
 function renderOrder(){
   const ids=Object.keys(cart);
   $("#orderList").innerHTML=ids.length?ids.map(id=>{const i=ALL.find(x=>x.id===id),c=cart[id];
-    return `<div class="row"><span>${c.q} × ${i.n}${c.note?`<br><small>${esc(c.note)}</small>`:""}</span><b>${money(c.q*i.p)}</b></div>`}).join(""):"העגלה ריקה. חזרו לתפריט לבחירת מנות.";
+    const nt=noteOf(id);return `<div class="row"><span>${c.q} × ${i.n}${nt?`<br><small>${esc(nt)}</small>`:""}</span><b>${money(c.q*i.p)}</b></div>`}).join(""):"העגלה ריקה. חזרו לתפריט לבחירת מנות.";
   if(ids.length)$("#orderList").insertAdjacentHTML("beforeend",`<div class="row sum"><span>סה״כ לתשלום</span><b><span class="nis">₪</span>${total()}</b></div>`);
 }
-function lines(){return Object.entries(cart).map(([id,c])=>{const i=ALL.find(x=>x.id===id);return {name:i.n,qty:c.q,price:i.p,note:c.note||""}})}
+function lines(){return Object.entries(cart).map(([id,c])=>{const i=ALL.find(x=>x.id===id);return {name:i.n,qty:c.q,price:i.p,note:noteOf(id)}})}
 function makeNo(){const d=new Date();return "J"+String(d.getDate()).padStart(2,"0")+String(d.getMonth()+1).padStart(2,"0")+"-"+Math.floor(1000+Math.random()*9000)}
 
 // ולידציה: שם בעברית בלבד, טלפון נייד ישראלי
@@ -440,7 +486,7 @@ document.addEventListener("click",e=>{
   if(CLOSED&&t.id!=="okBtn")return closedMsg();
   if(t.dataset.p)change(t.dataset.p,1);
   else if(t.dataset.m)change(t.dataset.m,-1);
-  else if(t.dataset.nb){const d=$("#d-"+t.dataset.nb),on=d.classList.toggle("noteon");t.textContent=on?"− הסתרת הערה":(NOTES[t.dataset.nb]?"✎ עריכת הערה":"+ הערה למנה");if(on)d.querySelector(".note").focus()}
+  else if(t.dataset.nb){const d=$("#d-"+t.dataset.nb),on=d.classList.toggle("noteon");t.textContent=on?"− הסתרה":nbLabel(t.dataset.nb)}
   else if(t.dataset.go){if(t.dataset.go==="order"&&!count())return done("לא נבחרו מנות","יש לבחור מנה מהתפריט");go(t.dataset.go)}
 });
 document.addEventListener("input",e=>{const id=e.target.dataset.note;if(!id)return;NOTES[id]=e.target.value;if(cart[id])cart[id].note=e.target.value});
@@ -452,7 +498,7 @@ $("#paid").onclick=async()=>{
   if(ok){$("#status").textContent="";done("התשלום דווח","תודה! הזמנה "+orderNo+" התקבלה. נתחיל להכין אחרי אימות התשלום.")}
   else done("השליחה נכשלה","לא הצלחנו לשלוח את הדיווח. בדקו את החיבור ונסו שוב.");
 };
-$("#newOrder").onclick=()=>{for(const k in cart)delete cart[k];for(const k in NOTES)delete NOTES[k];renderMenu();$("#gnote").value="";go("menu")};
+$("#newOrder").onclick=()=>{for(const k in cart)delete cart[k];for(const k in NOTES)delete NOTES[k];for(const k in OPTS)delete OPTS[k];renderMenu();$("#gnote").value="";go("menu")};
 // טוענים את התפריט מהגיליון. אם יש עותק שמור מהביקור הקודם – מציגים אותו מיד, ומעדכנים ברקע
 const MENU_KEY="jt_menu_v1";
 function applyMenuRows(rows){
@@ -460,7 +506,7 @@ function applyMenuRows(rows){
   (rows||[]).forEach((x,i)=>{
     if(!x.name||String(x.active).trim()==="לא")return;
     const c=x.cat||"";if(!map.has(c))map.set(c,[]);
-    map.get(c).push({id:"r"+(i+1),n:x.name,d:x.desc||"",p:Number(x.price)||0,img:x.img||""});
+    map.get(c).push({id:"r"+(i+1),n:x.name,d:x.desc||"",p:Number(x.price)||0,img:x.img||"",s:Math.max(0,Math.min(5,Math.round(Number(x.spicy)||0))),v:x.vegan==="כן"||((x.vegan==null||x.vegan==="")&&/טבעוני/.test(String(x.name||"")))});
   });
   if(!map.size)return false;
   MENU=[...map].map(([cat,items])=>({cat,items}));ALL=MENU.flatMap(c=>c.items);return true;

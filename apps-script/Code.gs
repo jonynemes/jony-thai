@@ -72,7 +72,7 @@ function clean_(v) {
 }
 function menuRows_() {
   return sheet_(MENU).getDataRange().getValues().slice(1).map(function (r, i) {
-    return { row: i + 2, cat: r[0], name: r[1], desc: r[2], price: r[3], active: r[4], img: r[5] };
+    return { row: i + 2, cat: r[0], name: r[1], desc: r[2], price: r[3], active: r[4], img: r[5], spicy: Number(r[6]) || 0, vegan: String(r[7] || "") };
   });
 }
 // ===== רשימות (קניות / הכנות / משימות) ומתכונים =====
@@ -405,14 +405,16 @@ function adminOp_(d) {
     const price = Number(m.price);
     if (!m.name || isNaN(price) || price < 0) return text_("bad item");
     const active = m.active === "לא" ? "לא" : "כן";
-    const row = [clean_(m.cat), clean_(m.name), clean_(m.desc), price, active, clean_(m.img)];
+    const spicy = Math.max(0, Math.min(5, Math.round(Number(m.spicy) || 0)));
+    const vegan = m.vegan === "כן" ? "כן" : "לא";
+    const row = [clean_(m.cat), clean_(m.name), clean_(m.desc), price, active, clean_(m.img), spicy, vegan]; // G: רמת חריפות 0-5, H: טבעונית
     const sh = sheet_(MENU);
     if (d.action === "addMenuRow") {
       sh.appendRow(row);
     } else {
       const r = Number(m.row);
       if (!(r >= 2 && r <= sh.getLastRow())) return text_("bad row");
-      sh.getRange(r, 1, 1, 6).setValues([row]);
+      sh.getRange(r, 1, 1, 8).setValues([row]);
     }
     return text_("ok");
   }
