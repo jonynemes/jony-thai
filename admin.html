@@ -106,6 +106,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media (max-width:700px){.grid2{grid-template-columns:1fr 1fr}.f-name,.f-desc,.f-img{grid-column:1/-1}.f-price,.f-cat,.f-act{grid-column:span 1}}
 .grid2 label{font-size:.9rem;font-weight:600;display:block;margin-bottom:.25rem;opacity:.85}
 #login{max-width:380px;margin:3rem auto;text-align:center}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;margin-top:.8rem;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:var(--r);padding:.7rem 1rem;font-weight:700}
+.gbtn:hover{background:#f3f4f6}
+.fbimp{margin-top:1.4rem;padding-top:1rem;border-top:1px dashed var(--line)}
+.fbimp p{opacity:.8;margin:.2rem 0 .7rem;line-height:1.55}
 .pw{position:relative;margin:.8rem 0}
 .pw input{padding-inline-end:3rem;margin:0}
 .eye{position:absolute;inset-block:0;inset-inline-end:.3rem;background:transparent;color:var(--jade2);padding:0 .7rem;border-radius:var(--r)}
@@ -308,7 +312,7 @@ html,body{overflow-x:clip}
 <main>
   <section id="login">
     <h2>כניסה</h2>
-    <p>הזינו את מפתח הניהול.</p>
+    <p id="loginTxt">הזינו את מפתח הניהול.</p>
     <div class="pw">
       <input id="key" type="password" autocomplete="current-password" aria-label="מפתח ניהול">
       <button type="button" class="eye" id="eye" aria-label="הצגת המפתח" aria-pressed="false">
@@ -317,6 +321,7 @@ html,body{overflow-x:clip}
     </div>
     <div class="err" id="err" role="alert"></div>
     <button class="primary" id="enter">כניסה</button>
+    <button class="gbtn" id="gEnter" type="button" hidden><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>כניסת מנהל עם Google</button>
   </section>
 
   <section id="app" hidden>
@@ -346,6 +351,10 @@ html,body{overflow-x:clip}
 
 <script>
 const SHEETS_URL="https://script.google.com/macros/s/AKfycbxHnb1rh7o6rO2AN9aVRK-nHPhqIECX-4FyEIpjVhUoq5H4F_dAc0Q4EjD1OW-AM-rclQ/exec";
+// מעבר ל-Firebase: נדלק עם ?fb=1 בכתובת (נזכר במכשיר), וכבה עם ?fb=0
+let USE_FB=false;try{const q=new URLSearchParams(location.search).get("fb");if(q==="1"||q==="0")localStorage.setItem("jt_fb",q);USE_FB=localStorage.getItem("jt_fb")==="1"}catch(e){}
+const fbWait=()=>window.FB?Promise.resolve():new Promise(r=>addEventListener("fbready",r,{once:true}));
+if(USE_FB){const s=document.createElement("script");s.type="module";s.src="fb.js";document.head.appendChild(s);document.documentElement.classList.add("fb")}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let lastTab="all";
@@ -358,12 +367,13 @@ function beep(){try{audio=audio||new (window.AudioContext||window.webkitAudioCon
 
 let busyN=0;function busy(d){busyN=Math.max(0,busyN+d);$("#loader").hidden=!busyN;$("#refresh").classList.toggle("spinning",busyN>0)}
 async function get(action,silent){if(!silent)busy(1);try{
+  if(USE_FB){await fbWait();return await FB.get(action)}
   const r=await fetch(SHEETS_URL+"?action="+action+"&key="+encodeURIComponent(KEY));
   return await r.json();
 }finally{if(!silent)busy(-1)}}
 async function post(body,silent){
   if(ROLE==="staff"&&!(body.action==="setStatus"&&body.status!=="בוטלה")){toast("אין הרשאה – רק המנהל יכול לעשות את זה");return "readonly"}
-  if(!silent)busy(1);try{const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{if(!silent)busy(-1)}
+  if(!silent)busy(1);try{if(USE_FB){await fbWait();return await FB.post(body)}const r=await fetch(SHEETS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:KEY,...body})});return (await r.text()).trim()}catch(e){return "network"}finally{if(!silent)busy(-1)}
 }
 function showLogin(msg){
   $("#login").hidden=false;$("#app").hidden=true;$("#logout").hidden=true;$("#views").hidden=true;$("#err").textContent=msg||"";
@@ -506,7 +516,7 @@ document.addEventListener("click",async e=>{
   else if(b.id==="saveAll"){
     // שומרים את כל המנות ששונו בלחיצה אחת
     const cards=[...document.querySelectorAll("#menu .card.dirty")];if(!cards.length)return;
-    const items=cards.map(c=>{const it={row:Number(c.dataset.row)};c.querySelectorAll("[data-f]").forEach(i=>it[i.dataset.f]=i.type==="checkbox"?(i.checked?"כן":"לא"):i.value.trim());return it});
+    const items=cards.map(c=>{const r=c.dataset.row,it={row:r&&r!=="0"?r:0};c.querySelectorAll("[data-f]").forEach(i=>it[i.dataset.f]=i.type==="checkbox"?(i.checked?"כן":"לא"):i.value.trim());return it});
     const bad=items.findIndex(it=>!it.name||it.price==="");
     if(bad>=0){toast("חסר שם או מחיר במנה");cards[bad].scrollIntoView({block:"center"});cards[bad].querySelector("input").focus();return}
     busy(1);let fail=0,err="";
@@ -543,10 +553,20 @@ $("#eye").onclick=()=>{
     :'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>';
   k.focus();
 };
-$("#enter").onclick=login;
+$("#enter").onclick=()=>login();
 $("#key").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
-$("#logout").onclick=()=>{try{localStorage.removeItem("jt_admin_key")}catch(e){};KEY="";known=null;showLogin("")};
-async function login(){
+$("#logout").onclick=async()=>{try{localStorage.removeItem("jt_admin_key")}catch(e){};KEY="";known=null;if(USE_FB){await fbWait();await FB.logout()}showLogin("")};
+const FB_LOGIN_ERR={"bad pass":"הסיסמה שגויה.","not admin":"החשבון הזה אינו חשבון המנהל.","network":"שגיאת חיבור. נסו שוב.","cancel":""};
+async function login(google){
+  if(USE_FB){
+    const pass=$("#key").value.trim();if(!google&&!pass)return;
+    try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();audio.resume()}catch(e){}
+    const btn=google?$("#gEnter"):$("#enter"),txt=btn.innerHTML;btn.disabled=true;btn.innerHTML=`<span class="spin sm"></span> מתחבר…`;
+    await fbWait();const r=google?await FB.loginGoogle():await FB.loginStaff(pass);
+    btn.disabled=false;btn.innerHTML=txt;
+    if(r!=="ok"){$("#err").textContent=FB_LOGIN_ERR[r]??("הכניסה נכשלה: "+r);return}
+    $("#key").value="";if(await loadOrders(true))start();return;
+  }
   KEY=$("#key").value.trim();if(!KEY)return;
   try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();audio.resume()}catch(e){} // מאשר שמע בדפדפן בשקט, בלי צפצוף
   const btn=$("#enter");btn.disabled=true;btn.innerHTML=`<span class="spin sm"></span> מתחבר…`;
@@ -570,8 +590,17 @@ $("#shopClosed").onchange=async e=>{
   if(res!=="ok"){toast(postErr(res));renderShop();return}
   OPEN=!close;renderShop();toast(close?"ההזמנות נסגרו":"ההזמנות נפתחו");
 };
-function start(){clearInterval(timer);timer=setInterval(()=>{if(!["menu","lists","staff"].includes(tab)&&!document.hidden)loadOrders(false,true)},30000)}
-if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
+function start(){clearInterval(timer);if(USE_FB)return;/* ב-Firebase ההזמנות מתעדכנות לבד, בלי בדיקה כל 30 שניות */timer=setInterval(()=>{if(!["menu","lists","staff"].includes(tab)&&!document.hidden)loadOrders(false,true)},30000)}
+if(USE_FB){
+  $("#loginTxt").textContent="אנשי צוות: הזינו את הסיסמה שלכם. מנהל: כניסה עם Google.";
+  $("#gEnter").hidden=false;$("#gEnter").onclick=()=>login(true);
+  busy(1);
+  fbWait().then(()=>{
+    // כל שינוי בהזמנות או במצב החנות (גם ממכשיר אחר) מצויר מיד
+    FB.onChange(()=>{if(!$("#app").hidden)loadOrders(false,true)});
+    return FB.authReady;
+  }).then(role=>{busy(-1);if(role)loadOrders(true);else showLogin("")});
+}else if(KEY){loadOrders(true).then(ok=>{if(ok)start()})}
 </script>
 <script>
 // ===== רשימות: קניות / הכנות / משימות, כמה להכין, מתכונים =====
@@ -771,6 +800,7 @@ function renderStaff(){
       <button class="primary" data-sadd>הוספה</button>
     </div>
     ${STAFF.length?`<ul class="stf-list">${STAFF.map(staffRow).join("")}</ul>`:`<div class="empty">עדיין אין אנשי צוות.</div>`}
+    ${USE_FB?`<div class="fbimp"><h3>העברת נתונים מהגיליון</h3><p>מעתיק מהגיליון של Google את התפריט, ההזמנות הפתוחות, הרשימות והמתכונים. מריצים פעם אחת, לפני המעבר. הרצה חוזרת מעדכנת ולא יוצרת כפילויות בתפריט ובהזמנות. אנשי הצוות לא עוברים – יש להוסיף אותם מחדש למעלה.</p><button class="ghost" data-simport>ייבוא מהגיליון</button></div>`:""}
   </div>`;
 }
 // חלון קופץ: מחזיר את הערכים שהוזנו, או null אם בוטל
@@ -790,11 +820,18 @@ function askModal({title,text,fields,ok}){
     document.body.appendChild(w);w.querySelector("input").focus();
   });
 }
-const askAdmin=why=>askModal({title:"אימות מנהל",text:why,fields:[{id:"a",label:"סיסמת המנהל",type:"password"}],ok:"המשך"}).then(v=>v&&v.a?v.a:null);
+const askAdmin=why=>USE_FB?FB.reauth().then(ok=>{if(!ok)toast("האימות עם Google בוטל או נכשל");return ok?"google":null}):askModal({title:"אימות מנהל",text:why,fields:[{id:"a",label:"סיסמת המנהל",type:"password"}],ok:"המשך"}).then(v=>v&&v.a?v.a:null);
 
 document.addEventListener("click",async e=>{
   const b=e.target.closest("#staff button");if(!b)return;
   if(b.hasAttribute("data-sgen")){$("#stfPass").value=genPass();return}
+  if(b.hasAttribute("data-simport")){
+    const v=await askModal({title:"ייבוא מהגיליון",text:"הזינו את מפתח הניהול הישן (זה שהיה בשימוש עד היום), כדי לקרוא את הנתונים מהגיליון.",fields:[{id:"k",label:"מפתח הניהול הישן",type:"password"}],ok:"ייבוא"});
+    if(!v||!v.k)return;
+    const r=await post({action:"importSheets",url:SHEETS_URL,oldKey:v.k});
+    if(!r.startsWith("ok")){toast(r==="bad admin"?"המפתח הישן שגוי":postErr(r));return}
+    const [,m,o,rc]=r.split(":");toast(`יובאו ${m} מנות, ${o} הזמנות ו-${rc} מתכונים`);return;
+  }
   if(b.dataset.scopy!==undefined){const n=b.dataset.scopy,p=REVEALED[n]!==undefined?REVEALED[n]:(NEWPASS&&NEWPASS.n===n?NEWPASS.p:"");try{await navigator.clipboard.writeText(p);toast("הסיסמה הועתקה")}catch(_){toast("לא הצלחנו להעתיק – סמנו והעתיקו ידנית")}return}
   if(b.dataset.shide){delete REVEALED[b.dataset.shide];renderStaff();return}
   if(b.hasAttribute("data-sadd")){

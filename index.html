@@ -229,6 +229,13 @@ const CONFIG = {
   BIT_LINK: "https://www.bitpay.co.il/app/me/93B017A1-7FD6-E8D1-8DB6-4E0BC51B1762BC50", // אפשר להחליף בלינק התשלום האישי שלכם
   PAYBOX_LINK: "https://payboxapp.page.link/", // אפשר להחליף בלינק האישי שלכם
 };
+/* ===== Firebase (מסד הנתונים החדש) – נדלק עם ?fb=1 בכתובת, נכבה עם ?fb=0 ===== */
+let USE_FB=false;try{const q=new URLSearchParams(location.search).get("fb");if(q==="1"||q==="0")localStorage.setItem("jt_fb",q);USE_FB=localStorage.getItem("jt_fb")==="1"}catch(e){}
+const FS="https://firestore.googleapis.com/v1/projects/jony-thai/databases/(default)/documents",FS_KEY="AIzaSyB9Xv5GMEx_-wCfcsAW8HkIRS8TY0BoL5I";
+const fsVal=v=>!v?null:"stringValue" in v?v.stringValue:"integerValue" in v?Number(v.integerValue):"doubleValue" in v?v.doubleValue:"booleanValue" in v?v.booleanValue:null;
+const fsRow=d=>Object.fromEntries(Object.entries(d.fields||{}).map(([k,v])=>[k,fsVal(v)]));
+async function fsMenu(signal){const r=await fetch(FS+"/menu?pageSize=300&key="+FS_KEY,{signal});if(!r.ok)throw 0;return ((await r.json()).documents||[]).map(fsRow).sort((a,b)=>(a.order||0)-(b.order||0))}
+async function fsOpen(signal){const r=await fetch(FS+"/settings/shop?key="+FS_KEY,{signal});if(r.status===404)return true;if(!r.ok)throw 0;return fsRow(await r.json()).open!==false}
 /* תפריט גיבוי – משמש רק אם הטבלה לא מוגדרת או לא זמינה */
 let MENU = [
   {cat:"",items:[
@@ -317,12 +324,36 @@ function checkout(){
   send("חדשה"); // רושם את ההזמנה בטבלה מיד עם סיום ההזמנה
 }
 async function send(status){
+  if(USE_FB)return sendFB(status);
   if(!CONFIG.SHEETS_URL){$("#status").textContent="הערה למפעיל: כתובת Google Sheets עדיין לא הוגדרה.";return false}
   const body={orderNo,status,name:$("#name").value.trim(),phone:$("#phone").value.trim(),
     note:$("#gnote").value.trim(),total:total(),items:lines().map(l=>`${l.qty}× ${l.name}${l.note?` (${l.note})`:""}`).join("\n")};
   try{ // text/plain מונע בקשת preflight מול Apps Script
     await fetch(CONFIG.SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
     return true;
+  }catch(e){$("#status").textContent="שגיאת רשת. נסו שוב.";return false}
+}
+// Firebase: הזמנה חדשה נוצרת רק אם המספר פנוי (אם תפוס – מגרילים מספר חדש). דיווח תשלום משנה רק את הסטטוס.
+async function sendFB(status){
+  const S=v=>({stringValue:String(v)});
+  try{
+    if(status!=="חדשה"){
+      const r=await fetch(FS+"/orders/"+encodeURIComponent(orderNo)+"?updateMask.fieldPaths=status&currentDocument.exists=true&key="+FS_KEY,
+        {method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{status:S(status)}})});
+      return r.ok;
+    }
+    for(let i=0;i<4;i++){
+      const fields={orderNo:S(orderNo),status:S("חדשה"),name:S($("#name").value.trim()),phone:S($("#phone").value.trim()),note:S($("#gnote").value.trim()),
+        total:{integerValue:String(Math.round(total()))},items:S(lines().map(l=>`${l.qty}× ${l.name}${l.note?` (${l.note})`:""}`).join("\n"))};
+      const r=await fetch(FS+":commit?key="+FS_KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({writes:[{
+        update:{name:"projects/jony-thai/databases/(default)/documents/orders/"+orderNo,fields},
+        currentDocument:{exists:false},updateTransforms:[{fieldPath:"time",setToServerValue:"REQUEST_TIME"}]}]})});
+      if(r.ok)return true;
+      if(r.status===403&&!(await fsOpen().catch(()=>true))){CLOSED=true;applyClosed();closedMsg();return false}
+      if(r.status!==403&&r.status!==409&&r.status!==400)break;
+      orderNo=makeNo(); // המספר כבר תפוס – מנסים מספר אחר
+    }
+    $("#status").textContent="ההזמנה לא נשמרה. נסו שוב.";return false;
   }catch(e){$("#status").textContent="שגיאת רשת. נסו שוב.";return false}
 }
 async function copy(t){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}toast("הועתק")}
@@ -358,6 +389,7 @@ function applyMenuRows(rows){
   MENU=[...map].map(([cat,items])=>({cat,items}));ALL=MENU.flatMap(c=>c.items);return true;
 }
 async function loadMenu(){
+  if(USE_FB)return loadMenuFB();
   if(!CONFIG.SHEETS_URL)return renderMenu();
   let cached=null;try{cached=localStorage.getItem(MENU_KEY)}catch(e){}
   let shown=false;
@@ -372,6 +404,20 @@ async function loadMenu(){
     if(txt!==cached&&applyMenuRows(JSON.parse(txt))){try{localStorage.setItem(MENU_KEY,txt)}catch(e){}renderMenu()}
     else if(!shown)renderMenu();
   }catch(e){if(!shown)renderMenu()/* תפריט הגיבוי */}
+  finally{clearTimeout(timer)}
+}
+async function loadMenuFB(){
+  const KEY_FB="jt_menu_fb1";let cached=null;try{cached=localStorage.getItem(KEY_FB)}catch(e){}
+  let shown=false;
+  if(cached){try{shown=applyMenuRows(JSON.parse(cached));if(shown)renderMenu()}catch(e){}}
+  if(!shown)$("#menu").innerHTML=`<div class="menucard menuload"><div class="spin"></div><p>טוען את התפריט…</p></div>`;
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);
+  fsOpen(ctl.signal).then(open=>{if(!open){CLOSED=true;applyClosed();closedMsg()}}).catch(()=>{});
+  try{
+    const rows=await fsMenu(ctl.signal),txt=JSON.stringify(rows);
+    if(txt!==cached&&applyMenuRows(rows)){try{localStorage.setItem(KEY_FB,txt)}catch(e){}renderMenu()}
+    else if(!shown)renderMenu();
+  }catch(e){if(!shown)renderMenu()}
   finally{clearTimeout(timer)}
 }
 // מצב "הזמנות סגורות": הודעה בכניסה, וכל פקדי ההזמנה מושבתים

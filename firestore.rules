@@ -1,0 +1,69 @@
+rules_version = '2';
+// כללי האבטחה של מסד הנתונים. מדביקים ב-Firebase Console → Firestore Database → Rules → Publish.
+// המנהל: חשבון Google שלמטה. צוות: מי שיש לו מסמך ב-staff. לקוחות: רק יצירת הזמנה חדשה ודיווח תשלום.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "jonynemes@gmail.com" && request.auth.token.email_verified == true;
+    }
+    function isStaff() {
+      return request.auth != null && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+    function isViewer() { return isAdmin() || isStaff(); }
+    function shopOpen() {
+      let s = /databases/$(database)/documents/settings/shop;
+      return !exists(s) || get(s).data.open != false;
+    }
+    function onlyStatusChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status"]);
+    }
+    function validNewOrder(no) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(["orderNo", "name", "phone", "items", "note", "total", "status", "time"])
+        && d.orderNo == no && d.status == "חדשה" && d.time == request.time
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 100
+        && d.phone is string && d.phone.size() <= 20
+        && d.items is string && d.items.size() > 0 && d.items.size() <= 3000
+        && d.note is string && d.note.size() <= 1000
+        && (d.total is int || d.total is float) && d.total >= 0 && d.total < 100000;
+    }
+
+    // תפריט ומצב החנות: כולם קוראים, רק המנהל משנה
+    match /menu/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /orders/{no} {
+      allow read: if isViewer();
+      allow create: if isAdmin() || (shopOpen() && validNewOrder(no));
+      allow update: if isAdmin()
+        // צוות: רק סטטוס, בלי ביטול ובלי לגעת בהזמנה שבוטלה
+        || (isStaff() && onlyStatusChanged() && resource.data.status != "בוטלה"
+            && request.resource.data.status in ["חדשה", "דווח תשלום", "שולם", "בהכנה", "מוכנה", "נמסרה"])
+        // לקוח: רק דיווח תשלום על הזמנה חדשה
+        || (onlyStatusChanged() && resource.data.status == "חדשה" && request.resource.data.status == "דווח תשלום");
+      allow delete: if isAdmin();
+    }
+
+    match /archive/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /lists/{id} {
+      allow read: if isViewer();
+      allow write: if isAdmin();
+    }
+    match /recipes/{id} {
+      allow read: if isViewer();
+      allow write: if isAdmin();
+    }
+    match /staff/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+  }
+}
