@@ -489,9 +489,9 @@ document.addEventListener("change",async e=>{
   if(sel){
     OVR[sel.dataset.no]={s:sel.value,t:Date.now()};
     const o=ORDERS.find(x=>x.orderNo===sel.dataset.no);if(o){o.status=sel.value;renderOrders()} // מעבירים מיד לסינון החדש
-    const res=await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value});
-    if(res!=="ok"){delete OVR[sel.dataset.no];toast(postErr(res));await loadOrders();return}
-    toast("הסטטוס עודכן: "+sel.value);await loadOrders();
+    const res=await post({action:"setStatus",orderNo:sel.dataset.no,status:sel.value},true); // נשמר ברקע – המסך לא ננעל
+    if(res!=="ok"){delete OVR[sel.dataset.no];toast(postErr(res));await loadOrders(false,true);return}
+    toast("הסטטוס עודכן: "+sel.value);loadOrders(false,true);
   }
 });
 document.addEventListener("click",async e=>{
@@ -504,12 +504,17 @@ document.addEventListener("click",async e=>{
     if(other){if(!["menu","lists","staff"].includes(tab))lastTab=tab;tab=v}else{tab=lastTab}
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
     $("#orders").hidden=other;$("#menu").hidden=v!=="menu";$("#lists").hidden=v!=="lists";$("#staff").hidden=v!=="staff";
-    if(v==="menu")loadMenu();else if(v==="lists")loadLists();else if(v==="staff")loadStaff();else loadOrders();
+    // מציגים מיד את מה שכבר נטען, ומרעננים ברקע בלי מסך טעינה
+    if(v==="menu"){if(!$("#menu").innerHTML.trim())loadMenu()}
+    else if(v==="lists"){if(LDATA){renderLists();loadLists(true)}else loadLists()}
+    else if(v==="staff")loadStaff();
+    else{renderOrders();loadOrders(false,true)}
   }
   else if(b.dataset.tab){
+    // סינון לפי סטטוס נעשה על ההזמנות שכבר נטענו – בלי לפנות לשרת
     tab=b.dataset.tab;
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===b));
-    loadOrders();
+    renderOrders();
   }
   else if(b.id==="refresh"){tab==="menu"?loadMenu():tab==="lists"?loadLists():tab==="staff"?loadStaff():loadOrders()}
   else if(b.id==="addDish"){const ms=document.querySelector("#menu .msave");if(!ms)return;ms.insertAdjacentHTML("beforebegin",menuCard());const c=ms.previousElementSibling;c.scrollIntoView({block:"center"});c.classList.add("dirty");markDirty();c.querySelector("input").focus()}
@@ -710,7 +715,7 @@ function recipesView(){
 document.addEventListener("click",async e=>{
   const b=e.target.closest("#lists button");if(!b)return;
   const d=b.dataset;
-  if(d.lt){if(document.querySelector("#lists .rcp.dirty")&&!confirm("יש שינויים במתכונים שלא נשמרו. לעבור בכל זאת?"))return;LT=d.lt;EDIT=null;if(LT==="count")await loadOrders(false,true);renderLists();return}
+  if(d.lt){if(document.querySelector("#lists .rcp.dirty")&&!confirm("יש שינויים במתכונים שלא נשמרו. לעבור בכל זאת?"))return;LT=d.lt;EDIT=null;renderLists();if(LT==="count")loadOrders(false,true).then(()=>{if(LT==="count"&&!$("#lists").hidden)renderLists()});return}
   if(d.scope){CNT_SCOPE=d.scope;renderLists();return}
   if(d.lsave!==undefined){
     const f=b.closest(".lform"),it={id:f.dataset.id||""};
