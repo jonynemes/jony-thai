@@ -55,6 +55,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media (max-width:640px){.tacts{position:static}}
 .tabs .tab{background:var(--card);border:2px solid var(--line);color:var(--ink)}
 .tabs .tab.on{background:var(--jade2);color:var(--gold2);border-color:var(--jade2)}
+.tabs .tab.on[data-tab="todo"]{background:var(--saffron);border-color:var(--saffron);color:#1a1a1a}
 .tabs .tab.on[data-tab="new"]{background:#e8731a;border-color:#e8731a;color:#fff}
 .tabs .tab.on[data-tab="paid"]{background:#2f7de1;border-color:#2f7de1;color:#fff}
 .tabs .tab.on[data-tab="prep"]{background:#8e5bd8;border-color:#8e5bd8;color:#fff}
@@ -62,7 +63,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .tabs .tab.on[data-tab="done"]{background:#8a8f8c;border-color:#8a8f8c;color:#fff}
 .tabs .tab.on[data-tab="cancel"]{background:#b23a3a;border-color:#b23a3a;color:#fff}
 .tabs .tab{--tc:var(--jade2);transition:background .15s,border-color .15s,color .15s}
-.tabs .tab[data-tab="new"]{--tc:#e8731a}.tabs .tab[data-tab="paid"]{--tc:#2f7de1}.tabs .tab[data-tab="prep"]{--tc:#8e5bd8}.tabs .tab[data-tab="ready"]{--tc:#2e9d5b}.tabs .tab[data-tab="done"]{--tc:#8a8f8c}.tabs .tab[data-tab="cancel"]{--tc:#b23a3a}
+.tabs .tab[data-tab="todo"]{--tc:var(--saffron)}.tabs .tab[data-tab="new"]{--tc:#e8731a}.tabs .tab[data-tab="paid"]{--tc:#2f7de1}.tabs .tab[data-tab="prep"]{--tc:#8e5bd8}.tabs .tab[data-tab="ready"]{--tc:#2e9d5b}.tabs .tab[data-tab="done"]{--tc:#8a8f8c}.tabs .tab[data-tab="cancel"]{--tc:#b23a3a}
 @media all{.tabs .tab[data-tab="all"]{--tc:var(--gold2)}}
 @media (hover:hover){.tabs .tab:not(.on):hover{background:color-mix(in srgb,var(--tc) 22%,var(--card));border-color:var(--tc)}.tabs .tab.on:hover{filter:brightness(1.08)}.refresh:hover{background:#3d74c2}}
 .tabs label{margin-inline-start:auto;display:flex;gap:.4rem;align-items:center;font-weight:600}
@@ -129,11 +130,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shopchk input{width:1.35rem;height:1.35rem;margin:0;padding:0;accent-color:#c8102e;cursor:pointer}
 #menu .card.dirty,#lists .rcp.dirty{border-color:var(--saffron);border-inline-start-color:var(--saffron)}
 .todo{background:color-mix(in srgb,var(--saffron) 12%,var(--card));border:1.5px solid var(--saffron);border-radius:var(--r);padding:.6rem .9rem;margin:.2rem 0 .9rem}
-.todo summary{display:flex;align-items:baseline;gap:.45rem;cursor:pointer;font-weight:800;font-size:1.05rem;list-style:none}
-.todo summary::-webkit-details-marker{display:none}
-.todo summary::after{content:"▾";margin-inline-start:auto;opacity:.6;transition:transform .2s}
-.todo:not([open]) summary::after{transform:rotate(90deg)}
-.todo summary b{font-size:1.7rem;color:var(--saffron);line-height:1}
+.todoh{display:flex;align-items:baseline;flex-wrap:wrap;gap:.45rem;font-weight:800;font-size:1.15rem}
+.todoh small{font-weight:600;opacity:.65;font-size:.85rem;margin-inline-start:auto}
+.todoh b{font-size:2rem;color:var(--saffron);line-height:1}
 .todo ul{list-style:none;margin:.55rem 0 .1rem;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.4rem}
 .todo li{display:flex;justify-content:space-between;align-items:center;gap:.6rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.4rem .7rem;font-weight:600}
 .todo li b{font-size:1.2rem;color:var(--saffron)}
@@ -327,6 +326,7 @@ html,body{overflow-x:clip}
     <div class="tabs">
       <button class="adddish menu-only" id="addDish" hidden>+ הוספת מנה</button>
       <button class="tab on" data-tab="all">הכל <span data-cnt="all"></span></button>
+      <button class="tab" data-tab="todo">נותרו להכין <span id="todoCnt"></span></button>
       <button class="tab" data-tab="new">חדשות <span data-cnt="new"></span></button>
       <button class="tab" data-tab="paid">שולמו <span data-cnt="paid"></span></button>
       <button class="tab" data-tab="prep">בהכנה <span data-cnt="prep"></span></button>
@@ -409,9 +409,11 @@ const inTab=(o,t)=>t==="all"||(FILTERS[t]||[]).includes(o.status);
 const EMPTY={all:"אין הזמנות.",new:"אין הזמנות חדשות.",paid:"אין הזמנות ששולמו.",prep:"אין הזמנות בהכנה.",ready:"אין הזמנות מוכנות.",done:"אין הזמנות שנמסרו.",cancel:"אין הזמנות שבוטלו."};
 function renderOrders(){
   document.querySelectorAll("[data-cnt]").forEach(s=>{const t=s.dataset.cnt,n=ORDERS.filter(o=>inTab(o,t)).length;s.textContent=n?"("+n+")":""});
+  const td=todoData();$("#todoCnt").textContent=td.total?"("+td.total+")":"";
+  if(tab==="todo"){$("#orders").innerHTML=todoBox(td);return}
   const list=ORDERS.filter(o=>inTab(o,tab));
   const empty=EMPTY[tab]||"אין הזמנות.";
-  $("#orders").innerHTML=todoBox()+(list.length?list.map(o=>`
+  $("#orders").innerHTML=(list.length?list.map(o=>`
     <div class="card" data-s="${esc(o.status)}">
       <div class="oh"><span>#${esc(o.orderNo)}</span><span class="ohr"><span>${fmtTime(o.time)}</span><button class="delbtn" data-del="${esc(o.orderNo)}" title="מחיקת הזמנה" aria-label="מחיקת הזמנה ${esc(o.orderNo)}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></span></div>
       <div class="cust"><span class="cl">פרטי המזמין</span><b>${esc(o.name)}</b><a href="tel:${esc(o.phone)}" dir="ltr">${esc(o.phone)}</a><a class="wa" href="${waLink(o.phone)}" target="_blank" rel="noopener">וואטסאפ</a></div>
@@ -424,17 +426,17 @@ function renderOrders(){
 }
 // "נותרו להכין": כל המנות בהזמנות שעוד לא מוכנות (חדשה / דווח תשלום / שולם / בהכנה), מתעדכן אוטומטית
 const TODO_ST=["חדשה","דווח תשלום","שולם","בהכנה"];
-let TODO_OPEN=true;try{TODO_OPEN=localStorage.getItem("jt_todo")!=="0"}catch(e){}
-function todoBox(){
-  if(typeof parseItems!=="function")return "";
+function todoData(){
   const m=new Map();
-  ORDERS.filter(o=>TODO_ST.includes(o.status)).forEach(o=>parseItems(o.items).forEach(it=>m.set(it.name,(m.get(it.name)||0)+it.q)));
-  const arr=[...m].sort((a,b)=>b[1]-a[1]),total=arr.reduce((s,[,q])=>s+q,0);
-  if(!total)return `<div class="todo done"><b>אין מנות שנותרו להכין</b> ✓</div>`;
-  return `<details class="todo"${TODO_OPEN?" open":""}><summary><span>נותרו להכין</span><b>${total}</b><span>${total===1?"מנה":"מנות"}</span></summary>
-    <ul>${arr.map(([n,q])=>`<li><span>${esc(n)}</span><b>${q}</b></li>`).join("")}</ul></details>`;
+  if(typeof parseItems==="function")ORDERS.filter(o=>TODO_ST.includes(o.status)).forEach(o=>parseItems(o.items).forEach(it=>m.set(it.name,(m.get(it.name)||0)+it.q)));
+  const arr=[...m].sort((a,b)=>b[1]-a[1]);
+  return {arr,total:arr.reduce((s,[,q])=>s+q,0),orders:ORDERS.filter(o=>TODO_ST.includes(o.status)).length};
 }
-document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("todo")){TODO_OPEN=e.target.open;try{localStorage.setItem("jt_todo",TODO_OPEN?"1":"0")}catch(_){}}},true);
+function todoBox(td){
+  if(!td.total)return `<div class="todo done"><b>אין מנות שנותרו להכין</b> ✓</div>`;
+  return `<div class="todo"><div class="todoh"><span>נותרו להכין</span><b>${td.total}</b><span>${td.total===1?"מנה":"מנות"}</span><small>מתוך ${td.orders===1?"הזמנה אחת":td.orders+" הזמנות"}</small></div>
+    <ul>${td.arr.map(([n,q])=>`<li><span>${esc(n)}</span><b>${q}</b></li>`).join("")}</ul></div>`;
+}
 // שורת סיכום בתחתית: סה"כ סכום ההזמנות שמוצגות בסינון הנוכחי (בלי הזמנות שבוטלו, חוץ מבסינון "בוטלה")
 function sumRow(list){
   const counted=tab==="cancel"?list:list.filter(o=>o.status!=="בוטלה");
