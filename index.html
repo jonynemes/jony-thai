@@ -510,7 +510,7 @@ function arcTitle(){document.querySelectorAll(".arctitle").forEach(h=>{
   if(!h.dataset.t){h.dataset.t=h.textContent;h.setAttribute("aria-label",h.textContent);h.innerHTML=[...h.dataset.t].map(c=>`<span aria-hidden="true">${c===" "?"&nbsp;":c}</span>`).join("")}
   const sp=[...h.children];sp.forEach(s=>s.style.transform="");
   const r=h.getBoundingClientRect(),W=r.width;if(!W)return;
-  const ratio=matchMedia("(max-width:640px)").matches?.045:.075,k=4*ratio/W,cx=r.left+W/2;
+  const ratio=matchMedia("(max-width:640px)").matches?.02:.03,k=4*ratio/W,cx=r.left+W/2;
   sp.forEach(s=>{const b=s.getBoundingClientRect(),dx=b.left+b.width/2-cx;s.style.transform=`translateY(${(k*dx*dx).toFixed(2)}px) rotate(${(Math.atan(2*k*dx)*180/Math.PI).toFixed(2)}deg)`});
   h.style.marginBottom=(ratio*W*.55).toFixed(1)+"px";
 })}
